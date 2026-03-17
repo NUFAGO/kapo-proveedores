@@ -1,147 +1,128 @@
-🚀 KAPO Proveedores
+# 🚀 KAPO Proveedores
 
-Sistema integral de gestión de proveedores, órdenes de compra y solicitudes de pago para la plataforma KAPO.
+Sistema integral de gestión de proveedores, órdenes de compra y solicitudes de pago para la plataforma **KAPO**.
 
-🧩 Descripción
+---
 
-KAPO Proveedores es un sistema diseñado para gestionar de forma eficiente:
+## 🧩 Descripción
 
-Proveedores
+**KAPO Proveedores** es una solución robusta diseñada para centralizar y eficientizar la relación operativa y financiera con proveedores. El sistema separa claramente el **Portal de Proveedores** del **Panel Administrativo**, facilitando la gestión operativa y financiera en un solo ecosistema.
 
-Órdenes de compra
+* **Proveedores:** Registro y perfiles detallados.
+* **Órdenes de Compra:** Seguimiento desde la creación hasta la entrega.
+* **Solicitudes de Pago:** Automatización de flujos financieros.
+* **Documentación:** Validación de archivos y cumplimiento normativo.
+* **Flujos Operativos:** Procesos configurables de revisión, aprobación y ejecución.
 
-Solicitudes de pago
+---
 
-Documentación asociada
+## ⚙️ Características Principales
 
-Flujos operativos (revisión, aprobación, ejecución)
+### 🧾 Gestión Documental
 
-Permite separar claramente el portal de proveedores y el panel administrativo, facilitando la gestión operativa y financiera.
+* Tipos de documento 100% configurables.
+* Plantillas personalizadas con soporte para carga de archivos.
+* Validación de documentos integrada en los flujos de trabajo.
 
-⚙️ Características principales
-🧾 Gestión documental
+### 💰 Solicitudes de Pago
 
-Tipos de documento configurables
+* Configuración dinámica de tipos de pago.
+* Vinculación directa con Órdenes de Compra (OC).
+* Flujo de aprobación multinivel.
 
-Plantillas con soporte de archivos
+### 🏗️ Órdenes de Compra
 
-Validación de documentos por flujo
+* Registro, seguimiento y trazabilidad completa.
+* Asociación inteligente con la base de datos de proveedores.
+* Validación estricta por el área de operaciones.
 
-💰 Solicitudes de pago
+### 👤 Portal de Proveedores
 
-Configuración dinámica de tipos de pago
+* **Dashboard Personalizado:** Vista rápida de estados y tareas pendientes.
+* **Self-Service:** Subida de documentación y seguimiento de órdenes.
+* **Transparencia:** Consulta de estados de pago y notificaciones en tiempo real.
 
-Asociación con órdenes de compra
+### 🛡️ Seguridad
 
-Flujo de aprobación
+* Autenticación mediante **JWT (JSON Web Tokens)**.
+* Implementación de **Refresh Tokens** para sesiones seguras.
+* Control de acceso basado en roles (**RBAC**).
 
-🏗️ Órdenes de compra
+---
 
-Registro y seguimiento
+## 🛠️ Stack Tecnológico
 
-Relación con proveedores
+| Capa | Tecnología |
+| :--- | :--- |
+| **Frontend** | Next.js 16 (App Router), TypeScript, Tailwind CSS |
+| **Backend** | Node.js, GraphQL, Apollo Server |
+| **Base de Datos** | MongoDB |
+| **Infraestructura** | Google Cloud Storage (Archivos) |
+| **Gestor de Paquetes** | pnpm |
 
-Validación por operaciones
+---
 
-👤 Portal de proveedores
+## 🧱 Arquitectura del Proyecto
 
-Dashboard personalizado
-
-Seguimiento de órdenes
-
-Subida de documentos
-
-Estado de pagos
-
-🛡️ Seguridad
-
-Autenticación con JWT
-
-Refresh tokens
-
-Control de acceso basado en roles (RBAC)
-
-🛠️ Stack tecnológico
-Frontend
-
-Next.js 16
-
-TypeScript
-
-Tailwind CSS
-
-Backend
-
-Node.js
-
-MongoDB
-
-GraphQL
-
-JWT
-
-Infraestructura
-
-Google Cloud Storage (archivos)
-
-pnpm (package manager)
-
-🧱 Arquitectura del proyecto
+```text
 kapo-proveedores/
 ├── src/
 │   ├── app/
-│   │   ├── (interno)/           # Panel administrativo
-│   │   ├── (portal)/            # Portal de proveedores
-│   │   └── api/                 # Endpoints / GraphQL handlers
-│   │
-│   ├── components/              # Componentes reutilizables
-│   ├── hooks/                   # Hooks personalizados
-│   ├── graphql/                 # Queries, mutations, schemas
-│   │
-│   ├── services/                # Lógica de negocio
-│   ├── repositories/            # Acceso a datos (DB)
-│   ├── middleware/              # Auth, validaciones
-│   ├── lib/                     # Utils (JWT, helpers)
-│   │
-│   └── types/                   # Tipos globales
-│
-├── public/
-├── docs/
+│   │   ├── (interno)/       # Panel administrativo (Admin/Staff)
+│   │   ├── (portal)/        # Portal de proveedores (Externo)
+│   │   └── api/             # Endpoints y GraphQL Handlers
+│   ├── components/          # Componentes UI reutilizables
+│   ├── hooks/               # Custom React hooks
+│   ├── graphql/             # Queries, Mutations y Schemas
+│   ├── services/            # Lógica de negocio (Business Logic)
+│   ├── repositories/        # Capa de acceso a datos (Data Access)
+│   ├── middleware/          # Auth, RBAC y validaciones
+│   ├── lib/                 # Utilidades (JWT, helpers, configs)
+│   └── types/               # Definiciones de TypeScript globales
+├── public/                  # Assets estáticos
+├── docs/                    # Documentación técnica adicional
 └── README.md
-🔄 Flujo principal del sistema
-Orden de Compra creada
-        ↓
-Asignación a proveedor
-        ↓
-Ejecución del servicio
-        ↓
-Validación por operaciones
-        ↓
-Solicitud de pago
-        ↓
-Aprobación
-        ↓
-Pago
-🧠 Módulos del sistema
 
-Proveedores
 
-Órdenes de Compra
+## Flujo Principal del Sistema
+Plaintext
+[ Orden de Compra ] 
+        │
+        ▼
+[ Asignación a Proveedor ]
+        │
+        ▼
+[ Ejecución del Servicio / Entrega ]
+        │
+        ▼
+[ Validación por Operaciones ] ───┐
+                                  │ (Rechazo)
+        ▼                         │
+[ Solicitud de Pago ] <───────────┘
+        │
+        ▼
+[ Aprobación Administrativa ]
+        │
+        ▼
+[ Ejecución de Pago (FIN) ]
+```
+---
+## Módulos del Sistema
+Proveedores: Directorio y gestión de maestros.
 
-Solicitudes de Pago
+Órdenes de Compra: Control de suministros y servicios.
 
-Tipos de Documento
+Solicitudes de Pago: Gestión de tesorería y facturación.
 
-Plantillas
+Tipos de Documento & Plantillas: Motor de reglas documentales.
 
-Configuraciones
+Configuraciones: Parámetros globales del sistema.
+---
+## 🔐 Seguridad y Cumplimiento
+JWT: Expiración controlada y rotación de tokens.
 
-🔐 Seguridad
+Middleware: Capas de protección de rutas y validación de sesión.
 
-JWT con expiración y refresh tokens
+RBAC: Control granular de permisos según el tipo de usuario.
 
-Middleware de autenticación
-
-RBAC (Role-Based Access Control)
-
-Validación y sanitización de inputs
+Sanitización: Validación de inputs para prevenir vulnerabilidades comunes.
