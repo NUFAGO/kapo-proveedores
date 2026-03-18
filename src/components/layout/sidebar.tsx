@@ -21,6 +21,7 @@ import {
   MdFileUpload,
 } from 'react-icons/md';
 import { TbTemplateFilled } from "react-icons/tb";
+import { LuClipboardList } from "react-icons/lu";
 import { FaFileInvoiceDollar  } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -72,9 +73,14 @@ const adminNavItems: NavItem[] = [
         icon: MdDescription,
       },
       {
-        name: 'Tipos Solicitud Pago',
-        href: '/configuracion/tipos-solicitud-pago',
-        icon: MdPayments,
+        name: 'Categorías Checklist',
+        href: '/configuracion/categorias-checklist',
+        icon: MdChecklist,
+      },
+      {
+        name: 'Checklists y Plantillas',
+        href: '/configuracion/checklist',
+        icon: MdFileUpload,
       },
       {
         name: 'Plantillas Documento',

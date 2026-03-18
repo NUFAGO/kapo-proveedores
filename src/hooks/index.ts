@@ -44,6 +44,47 @@ export {
   type TipoDocumentoConnection
 } from './useTipoDocumento';
 
+// Hooks de categorías de checklist
+export {
+  useCategoriasChecklist,
+  useCategoriaChecklist,
+  useCategoriasChecklistActivas,
+  useCategoriasChecklistInactivas,
+  useCrearCategoriaChecklist,
+  useActualizarCategoriaChecklist,
+  useEliminarCategoriaChecklist,
+  type CategoriaChecklist,
+  type CategoriaChecklistInput,
+  type CategoriaChecklistFiltros,
+  type CategoriaChecklistConnection
+} from './useCategoriaChecklist';
+
+// Hooks de plantillas de checklist
+export {
+  usePlantillasChecklist,
+  usePlantillaChecklist,
+  usePlantillasChecklistActivas,
+  usePlantillasChecklistInactivas,
+  useCrearPlantillaChecklist,
+  useActualizarPlantillaChecklist,
+  useEliminarPlantillaChecklist,
+  type PlantillaChecklist,
+  type PlantillaChecklistInput,
+  type PlantillaChecklistFiltros,
+  type PlantillaChecklistConnection,
+  type RequisitoDocumento
+} from './usePlantillaChecklist';
+
+// Hooks de plantillas de documento
+export {
+  usePlantillaDocumento,
+  usePlantillaDocumentoPorId,
+  type PlantillaDocumento,
+  type PlantillaDocumentoFiltros,
+  type PlantillaDocumentoConnection,
+  type PlantillaDocumentoInput
+} from './usePlantillaDocumento';
+
 // Hook de upload de archivos
 export {
   useUpload,

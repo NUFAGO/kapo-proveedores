@@ -88,9 +88,16 @@ export const UPLOAD_CONFIGS = {
     allowedTypes: [
       "application/pdf",
       "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      "text/plain",
+      "image/jpeg",
+      "image/png"
     ],
-    accept: ".pdf,.doc,.docx"
+    accept: ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
   },
   EVIDENCIAS_PAGO: {
     maxFileSize: 15 * 1024 * 1024, // 15MB

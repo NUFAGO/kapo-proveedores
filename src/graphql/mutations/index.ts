@@ -20,12 +20,19 @@ export {
   DELETE_TIPO_DOCUMENTO_MUTATION
 } from './tipo-documento.mutations';
 
-// Tipo Solicitud Pago mutations
+// Categoria Checklist mutations
 export {
-  CREATE_TIPO_SOLICITUD_PAGO_MUTATION,
-  UPDATE_TIPO_SOLICITUD_PAGO_MUTATION,
-  DELETE_TIPO_SOLICITUD_PAGO_MUTATION
-} from './tipo-solicitud-pago.mutations';
+  CREATE_CATEGORIA_CHECKLIST_MUTATION,
+  UPDATE_CATEGORIA_CHECKLIST_MUTATION,
+  DELETE_CATEGORIA_CHECKLIST_MUTATION
+} from './categoria-checklist.mutations';
+
+// Plantilla Checklist mutations
+export {
+  CREATE_PLANTILLA_CHECKLIST_MUTATION,
+  UPDATE_PLANTILLA_CHECKLIST_MUTATION,
+  DELETE_PLANTILLA_CHECKLIST_MUTATION
+} from './plantilla-checklist.mutations';
 
 // Upload mutations
 export {

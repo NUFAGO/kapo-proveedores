@@ -1,34 +1,34 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useCrearTipoSolicitudPago, useActualizarTipoSolicitudPago, useTipoSolicitudPago } from '@/hooks/useTipoSolicitudPago';
+import { useCrearCategoriaChecklist, useActualizarCategoriaChecklist, useCategoriaChecklist } from '@/hooks/useCategoriaChecklist';
 import { Button, Input, Textarea, Select } from '@/components/ui';
 import Modal from '@/components/ui/modal';
 import { FileText, Edit, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { TipoSolicitudPago } from '@/hooks/useTipoSolicitudPago';
+import type { CategoriaChecklist } from '@/hooks/useCategoriaChecklist';
 
-interface TipoSolicitudPagoFormProps {
+interface CategoriaChecklistFormProps {
   isOpen: boolean;
   onClose: () => void;
-  tipoSolicitudPagoId?: string; // Si se proporciona, es modo edición
+  categoriaChecklistId?: string; // Si se proporciona, es modo edición
 }
 
-// Interfaz local para el formulario que permite categoría vacía
-interface TipoSolicitudPagoFormData {
+// Interfaz local para el formulario que permite tipoUso vacío
+interface CategoriaChecklistFormData {
   nombre: string;
   descripcion: string;
-  categoria: 'anticipado' | 'avance' | 'cierre' | 'entrega' | 'gasto' | 'ajuste' | '';
+  tipoUso: 'pago' | 'documentos_oc' | '';
   permiteMultiple: boolean;
   permiteVincularReportes: boolean;
   estado: 'activo' | 'inactivo';
 }
 
-export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPagoId }: TipoSolicitudPagoFormProps) {
-  const [formData, setFormData] = useState<TipoSolicitudPagoFormData>({
+export default function CategoriaChecklistForm({ isOpen, onClose, categoriaChecklistId }: CategoriaChecklistFormProps) {
+  const [formData, setFormData] = useState<CategoriaChecklistFormData>({
     nombre: '',
     descripcion: '',
-    categoria: '' as 'anticipado' | 'avance' | 'cierre' | 'entrega' | 'gasto' | 'ajuste' | '',
+    tipoUso: '' as 'pago' | 'documentos_oc' | '',
     permiteMultiple: false,
     permiteVincularReportes: false,
     estado: 'activo' as 'activo' | 'inactivo'
@@ -36,21 +36,17 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isEditMode = !!tipoSolicitudPagoId;
+  const isEditMode = !!categoriaChecklistId;
   
   // Hooks para mutaciones
-  const createTipoSolicitudPago = useCrearTipoSolicitudPago();
-  const updateTipoSolicitudPago = useActualizarTipoSolicitudPago();
-  const { data: tipoSolicitudPagoData, isLoading: isLoadingTipo } = useTipoSolicitudPago(tipoSolicitudPagoId || '');
+  const createCategoriaChecklist = useCrearCategoriaChecklist();
+  const updateCategoriaChecklist = useActualizarCategoriaChecklist();
+  const { data: categoriaChecklistData, isLoading: isLoadingCategoria } = useCategoriaChecklist(categoriaChecklistId || '');
 
   // Opciones para los selects
-  const categoriaOptions = [
-    { value: 'anticipado', label: 'Anticipado' },
-    { value: 'avance', label: 'Avance' },
-    { value: 'cierre', label: 'Cierre' },
-    { value: 'entrega', label: 'Entrega' },
-    { value: 'gasto', label: 'Gasto' },
-    { value: 'ajuste', label: 'Ajuste' }
+  const tipoUsoOptions = [
+    { value: 'pago', label: 'Pago' },
+    { value: 'documentos_oc', label: 'Documentos OC' }
   ];
 
   const estadoOptions = [
@@ -60,18 +56,18 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
 
   // Cargar datos si está en modo edición
   useEffect(() => {
-    if (isEditMode && tipoSolicitudPagoData?.obtenerTipoSolicitudPago) {
-      const tipo = tipoSolicitudPagoData.obtenerTipoSolicitudPago;
+    if (isEditMode && categoriaChecklistData?.obtenerCategoriaChecklist) {
+      const categoria = categoriaChecklistData.obtenerCategoriaChecklist;
       setFormData({
-        nombre: tipo.nombre,
-        descripcion: tipo.descripcion || '',
-        categoria: tipo.categoria,
-        permiteMultiple: tipo.permiteMultiple,
-        permiteVincularReportes: tipo.permiteVincularReportes,
-        estado: tipo.estado
+        nombre: categoria.nombre,
+        descripcion: categoria.descripcion || '',
+        tipoUso: categoria.tipoUso,
+        permiteMultiple: categoria.permiteMultiple || false,
+        permiteVincularReportes: categoria.permiteVincularReportes || false,
+        estado: categoria.estado
       });
     }
-  }, [isEditMode, tipoSolicitudPagoData]);
+  }, [isEditMode, categoriaChecklistData]);
 
   // Resetear formulario cuando se cierra
   useEffect(() => {
@@ -79,7 +75,7 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
       setFormData({
         nombre: '',
         descripcion: '',
-        categoria: '',
+        tipoUso: '',
         permiteMultiple: false,
         permiteVincularReportes: false,
         estado: 'activo'
@@ -93,6 +89,16 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
     // Limpiar error del campo cuando se modifica
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+
+    // Si el tipoUso cambia a 'documentos_oc', resetear los campos opcionales
+    if (field === 'tipoUso' && value === 'documentos_oc') {
+      setFormData(prev => ({ 
+        ...prev, 
+        tipoUso: value,
+        permiteMultiple: false,
+        permiteVincularReportes: false
+      }));
     }
   };
 
@@ -111,8 +117,8 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
       newErrors.descripcion = 'La descripción debe tener al menos 10 caracteres';
     }
 
-    if (!formData.categoria) {
-      newErrors.categoria = 'La categoría es requerida';
+    if (!formData.tipoUso) {
+      newErrors.tipoUso = 'El tipo de uso es requerido';
     }
 
     if (!formData.estado) {
@@ -131,29 +137,35 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
     }
 
     try {
-      // Convertir formData a TipoSolicitudPagoInput (sin categoría vacía)
+      // Convertir formData a CategoriaChecklistInput (solo incluir campos opcionales si aplica)
       const input = {
-        ...formData,
-        categoria: formData.categoria || 'anticipado' // Valor por defecto si está vacío
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        tipoUso: formData.tipoUso as 'pago' | 'documentos_oc',
+        estado: formData.estado,
+        ...(formData.tipoUso === 'pago' && {
+          permiteMultiple: formData.permiteMultiple,
+          permiteVincularReportes: formData.permiteVincularReportes
+        })
       };
       
       if (isEditMode) {
-        await updateTipoSolicitudPago.mutateAsync({
-          id: tipoSolicitudPagoId!,
+        await updateCategoriaChecklist.mutateAsync({
+          id: categoriaChecklistId!,
           input
         });
-        toast.success('Tipo de solicitud de pago actualizado correctamente');
+        toast.success('Categoría de checklist actualizada correctamente');
       } else {
-        await createTipoSolicitudPago.mutateAsync(input);
-        toast.success('Tipo de solicitud de pago creado correctamente');
+        await createCategoriaChecklist.mutateAsync(input);
+        toast.success('Categoría de checklist creada correctamente');
       }
       onClose();
     } catch (error: any) {
-      toast.error(error.message || 'Error al guardar el tipo de solicitud de pago');
+      toast.error(error.message || 'Error al guardar la categoría de checklist');
     }
   };
 
-  const isLoading = createTipoSolicitudPago.isPending || updateTipoSolicitudPago.isPending;
+  const isLoading = createCategoriaChecklist.isPending || updateCategoriaChecklist.isPending;
 
   const modalTitle = (
     <div className="flex items-center gap-3">
@@ -169,10 +181,10 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
       </div>
       <div>
         <h2 className="text-sm font-bold text-left w-full" style={{ color: 'var(--text-on-content-bg-heading)' }}>
-          {isEditMode ? 'Editar Tipo de Solicitud de Pago' : 'Crear Tipo de Solicitud de Pago'}
+          {isEditMode ? 'Editar Categoría de Checklist' : 'Crear Categoría de Checklist'}
         </h2>
         <p className="text-xs text-left w-full" style={{ color: 'var(--text-secondary)' }}>
-          {isEditMode ? 'Modifica los datos del tipo de solicitud de pago' : 'Registra un nuevo tipo de solicitud de pago en el sistema'}
+          {isEditMode ? 'Modifica los datos de la categoría de checklist' : 'Registra una nueva categoría de checklist en el sistema'}
         </p>
       </div>
     </div>
@@ -221,7 +233,7 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
             type="text"
             value={formData.nombre}
             onChange={(e) => handleInputChange('nombre', e.target.value)}
-            placeholder="Ej: Adelanto de Viáticos"
+            placeholder="Ej: Documentos de Pago"
             className={errors.nombre ? 'border-red-400' : ''}
             disabled={isLoading}
           />
@@ -237,7 +249,7 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
           <Textarea
             value={formData.descripcion}
             onChange={(e) => handleInputChange('descripcion', e.target.value)}
-            placeholder="Describe brevemente para qué se usa este tipo de solicitud de pago"
+            placeholder="Describe brevemente para qué se usa esta categoría de checklist"
             rows={3}
             disabled={isLoading}
           />
@@ -249,53 +261,66 @@ export default function TipoSolicitudPagoForm({ isOpen, onClose, tipoSolicitudPa
           </p>
         </div>
 
-        {/* Categoría */}
+        {/* Tipo de Uso */}
         <div>
           <label className="block text-xs font-medium text-text-primary mb-1">
-            Categoría{errors.categoria && <span className="text-red-500"> *</span>}
+            Tipo de Uso{errors.tipoUso && <span className="text-red-500"> *</span>}
           </label>
           <Select
-            value={formData.categoria}
-            onChange={(value) => handleInputChange('categoria', value)}
-            options={categoriaOptions}
-            className={errors.categoria ? 'border-red-400' : ''}
+            value={formData.tipoUso}
+            onChange={(value) => handleInputChange('tipoUso', value)}
+            options={tipoUsoOptions}
+            className={errors.tipoUso ? 'border-red-400' : ''}
             disabled={isLoading}
           />
-          {errors.categoria && (
-            <p className="mt-1 text-xs text-red-400">{errors.categoria}</p>
+          {errors.tipoUso && (
+            <p className="mt-1 text-xs text-red-400">{errors.tipoUso}</p>
           )}
+          <p className="text-xs text-gray-500 mt-1">
+            {formData.tipoUso === 'pago' 
+              ? 'Esta categoría se usará para checklists de pagos'
+              : formData.tipoUso === 'documentos_oc'
+              ? 'Esta categoría se usará para checklists de documentos OC'
+              : 'Selecciona el tipo de uso para esta categoría'
+            }
+          </p>
         </div>
 
-        {/* Checkboxes */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="permiteMultiple"
-              checked={formData.permiteMultiple}
-              onChange={(e) => handleInputChange('permiteMultiple', e.target.checked)}
-              disabled={isLoading}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-            />
-            <label htmlFor="permiteMultiple" className="text-xs text-text-primary">
-              Permite múltiples solicitudes
-            </label>
-          </div>
+        {/* Checkboxes - solo visibles para tipoUso = 'pago' */}
+        {formData.tipoUso === 'pago' && (
+          <div className="space-y-3 bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
+              Opciones adicionales para pagos:
+            </p>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="permiteMultiple"
+                checked={formData.permiteMultiple}
+                onChange={(e) => handleInputChange('permiteMultiple', e.target.checked)}
+                disabled={isLoading}
+                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              />
+              <label htmlFor="permiteMultiple" className="text-xs text-text-primary">
+                Permite múltiples solicitudes
+              </label>
+            </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="permiteVincularReportes"
-              checked={formData.permiteVincularReportes}
-              onChange={(e) => handleInputChange('permiteVincularReportes', e.target.checked)}
-              disabled={isLoading}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-            />
-            <label htmlFor="permiteVincularReportes" className="text-xs text-text-primary">
-              Permite vincular reportes
-            </label>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="permiteVincularReportes"
+                checked={formData.permiteVincularReportes}
+                onChange={(e) => handleInputChange('permiteVincularReportes', e.target.checked)}
+                disabled={isLoading}
+                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+              />
+              <label htmlFor="permiteVincularReportes" className="text-xs text-text-primary">
+                Permite vincular reportes
+              </label>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Estado */}
         <div>

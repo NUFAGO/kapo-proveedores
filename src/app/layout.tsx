@@ -8,13 +8,11 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Kapo Proveedores',
   description: 'Sistema completo para la gestión de proveedores',
-  manifest: '/manifest.json',
 };
 
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#1f2937',
 };
 
 export default function RootLayout({

@@ -9,6 +9,7 @@ export interface PlantillaDocumento {
   tipoDocumentoId: string;
   nombrePlantilla: string;
   plantillaUrl: string;
+  formatosPermitidos?: string;
   activo: boolean;
   fechaCreacion: string;
   fechaActualizacion?: string;
@@ -38,6 +39,7 @@ export interface PlantillaDocumentoInput {
   tipoDocumentoId: string;
   nombrePlantilla: string;
   plantillaUrl: string;
+  formatosPermitidos?: string;
   activo: boolean;
 }
 
@@ -51,6 +53,7 @@ const LISTAR_PLANTILLAS_DOCUMENTO = `
         tipoDocumentoId
         nombrePlantilla
         plantillaUrl
+        formatosPermitidos
         activo
         fechaCreacion
         fechaActualizacion
@@ -74,6 +77,7 @@ const OBTENER_PLANTILLA_DOCUMENTO = `
       tipoDocumentoId
       nombrePlantilla
       plantillaUrl
+      formatosPermitidos
       activo
       fechaCreacion
       fechaActualizacion
@@ -95,6 +99,7 @@ const CREAR_PLANTILLA_DOCUMENTO = `
       tipoDocumentoId
       nombrePlantilla
       plantillaUrl
+      formatosPermitidos
       activo
       fechaCreacion
       fechaActualizacion
@@ -110,6 +115,7 @@ const ACTUALIZAR_PLANTILLA_DOCUMENTO = `
       tipoDocumentoId
       nombrePlantilla
       plantillaUrl
+      formatosPermitidos
       activo
       fechaCreacion
       fechaActualizacion
@@ -148,6 +154,28 @@ export function usePlantillaDocumento(
     },
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
+
+  // Función para búsqueda dinámica
+  const buscarPlantillas = async (searchTerm: string, limit: number = 20) => {
+    try {
+      const response = await graphqlRequest(LISTAR_PLANTILLAS_DOCUMENTO, {
+        limit,
+        offset: 0,
+        filters: {
+          ...filters,
+          busqueda: searchTerm
+        }
+      });
+      
+      return response.listarPlantillasDocumento?.plantillasDocumento?.map((plantilla: PlantillaDocumento) => ({
+        value: plantilla.id,
+        label: `${plantilla.nombrePlantilla} - ${plantilla.tipoDocumento?.nombre || 'Sin tipo'}`
+      })) || [];
+    } catch (error) {
+      console.error('Error buscando plantillas:', error);
+      return [];
+    }
+  };
 
   // Mutación para crear
   const crearMutation = useMutation({
@@ -209,6 +237,7 @@ export function usePlantillaDocumento(
     isLoading,
     error,
     refetch,
+    buscarPlantillas,
     crearPlantillaDocumento: crearMutation.mutateAsync,
     actualizarPlantillaDocumento: actualizarMutation.mutateAsync,
     eliminarPlantillaDocumento: eliminarMutation.mutateAsync,

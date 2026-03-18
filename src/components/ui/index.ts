@@ -9,5 +9,6 @@ export type { Column, StatusConfig, DataTableProps } from './data-table';
 export { Select } from './select';
 export type { SelectOption } from './select';
 export { SelectSearch } from './select-search';
+export { FormatosSelector } from './formatos-selector';
 export type { CheckboxOption } from './notification-modal';
 export { FileUpload } from './FileUpload';

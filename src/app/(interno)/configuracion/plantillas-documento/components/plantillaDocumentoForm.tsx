@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { usePlantillaDocumento, usePlantillaDocumentoPorId, type PlantillaDocumento, type PlantillaDocumentoInput } from '@/hooks/usePlantillaDocumento';
 import { useTiposDocumento } from '@/hooks/useTipoDocumento';
-import { Button, Input, Select } from '@/components/ui';
+import { Button, Input, Select, FormatosSelector } from '@/components/ui';
 import { useUpload } from '@/hooks/useUpload';
 import Modal from '@/components/ui/modal';
 import { FileText, Edit, CheckCircle, Upload, X } from 'lucide-react';
@@ -22,6 +22,7 @@ interface PlantillaDocumentoFormData {
   nombrePlantilla: string;
   archivos: File[];
   plantillaUrl: string;
+  formatosPermitidos: string;
   activo: boolean;
 }
 
@@ -31,6 +32,7 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
     nombrePlantilla: '',
     archivos: [],
     plantillaUrl: '',
+    formatosPermitidos: '',
     activo: true
   });
 
@@ -57,6 +59,7 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
       nombrePlantilla: '',
       archivos: [],
       plantillaUrl: '',
+      formatosPermitidos: '',
       activo: true
     });
     setErrors({});
@@ -72,6 +75,7 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
         nombrePlantilla: plantillaData.nombrePlantilla,
         archivos: [],
         plantillaUrl: plantillaData.plantillaUrl || '',
+        formatosPermitidos: plantillaData.formatosPermitidos || '',
         activo: plantillaData.activo
       };
       
@@ -160,10 +164,16 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
         const resultado = await uploadMultipleFiles(formData.archivos, { 
           tipo: 'PLANTILLAS_DOCUMENTO',
           allowedTypes: [
-            'application/pdf', 'application/msword',
+            'application/pdf',
+            'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain',
+            'image/jpeg',
+            'image/png'
           ]
         });
         
@@ -181,6 +191,7 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
         tipoDocumentoId: formData.tipoDocumentoId,
         nombrePlantilla: formData.nombrePlantilla.trim(),
         plantillaUrl: plantillaUrl,
+        formatosPermitidos: formData.formatosPermitidos || undefined,
         activo: formData.activo
       };
 
@@ -226,12 +237,17 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
       'application/pdf', 'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      'text/plain',
+      'image/jpeg',
+      'image/png'
     ];
 
     const validateFile = (file: File): string | null => {
       if (file.size > maxSize) return `El archivo "${file.name}" supera el límite de 10MB`;
-      if (!allowedTypes.includes(file.type)) return `Archivo no permitido: PDF, DOC, DOCX, XLS, XLSX`;
+      if (!allowedTypes.includes(file.type)) return `Archivo no permitido. Formatos válidos: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, JPEG, PNG`;
       return null;
     };
 
@@ -271,7 +287,7 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.doc,.docx,.xls,.xlsx"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
               multiple={false}
               onChange={(e) => processFiles(e.target.files)}
               className="hidden"
@@ -464,6 +480,16 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
               {errors.plantillaUrl}
             </p>
           )}
+        </div>
+
+        {/* Formatos Permitidos */}
+        <div>
+          <FormatosSelector
+            value={formData.formatosPermitidos}
+            onChange={(value) => handleInputChange('formatosPermitidos', value)}
+            disabled={isLoading}
+            className="w-full"
+          />
         </div>
 
         {/* Estado */}

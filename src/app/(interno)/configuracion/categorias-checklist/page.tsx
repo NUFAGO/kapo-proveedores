@@ -5,31 +5,31 @@ import { Plus, Search, X, Eye, Edit, Trash2, FileText } from 'lucide-react';
 import { Button, DataTable } from '@/components/ui';
 import { Input } from '@/components/ui/input';
 import LoadingSpinner from '@/components/ui/loading-spinner';
-import { useTiposSolicitudPago, type TipoSolicitudPago, type TipoSolicitudPagoFiltros } from '@/hooks/useTipoSolicitudPago';
-import TipoSolicitudPagoForm from './components/tipoSolicitudPagoForm';
-import TipoSolicitudPagoView from './components/tipoSolicitudPagoView';
+import { useCategoriasChecklist, type CategoriaChecklist, type CategoriaChecklistFiltros } from '@/hooks/useCategoriaChecklist';
+import CategoriaChecklistForm from './components/categoriaChecklistForm';
+import CategoriaChecklistView from './components/categoriaChecklistView';
 
-export default function TipoSolicitudPagoPage() {
+export default function CategoriaChecklistPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTipo, setSelectedTipo] = useState<TipoSolicitudPago | null>(null);
+  const [selectedCategoria, setSelectedCategoria] = useState<CategoriaChecklist | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingTipoId, setEditingTipoId] = useState<string | undefined>();
+  const [editingCategoriaId, setEditingCategoriaId] = useState<string | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
 
   const limit = 10;
   const offset = (currentPage - 1) * limit;
 
   // Construir filtros para la búsqueda
-  const filters: TipoSolicitudPagoFiltros | undefined = searchQuery
+  const filters: CategoriaChecklistFiltros | undefined = searchQuery
     ? { nombre: searchQuery }
     : undefined;
 
   // Usar el hook personalizado con paginación y filtros
-  const { data, isLoading, error, refetch } = useTiposSolicitudPago(filters, limit, offset);
+  const { data, isLoading, error, refetch } = useCategoriasChecklist(filters, limit, offset);
 
   // Extraer datos del resultado
-  const tiposSolicitudPago = data?.tiposSolicitudPago || [];
+  const categoriasChecklist = data?.categoriasChecklist || [];
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / limit);
 
@@ -47,54 +47,44 @@ export default function TipoSolicitudPagoPage() {
     setCurrentPage(page);
   };
 
-  const handleViewTipo = (tipo: TipoSolicitudPago) => {
-    setSelectedTipo(tipo);
+  const handleViewCategoria = (categoria: CategoriaChecklist) => {
+    setSelectedCategoria(categoria);
     setIsModalOpen(true);
   };
 
-  const handleEditFromView = (tipo: TipoSolicitudPago) => {
-    handleEditTipo(tipo);
+  const handleEditFromView = (categoria: CategoriaChecklist) => {
+    handleEditCategoria(categoria);
   };
 
-  const handleEditTipo = (tipo: TipoSolicitudPago) => {
-    setEditingTipoId(tipo.id);
+  const handleEditCategoria = (categoria: CategoriaChecklist) => {
+    setEditingCategoriaId(categoria.id);
     setIsFormOpen(true);
   };
 
-  const handleDeleteTipo = (tipo: TipoSolicitudPago) => {
+  const handleDeleteCategoria = (categoria: CategoriaChecklist) => {
     // Placeholder para funcionalidad de eliminación
-    console.log('Eliminar tipo:', tipo);
+    console.log('Eliminar categoría:', categoria);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setSelectedTipo(null);
+    setSelectedCategoria(null);
   };
 
   const handleOpenCreateForm = () => {
-    setEditingTipoId(undefined);
+    setEditingCategoriaId(undefined);
     setIsFormOpen(true);
   };
 
   const handleCloseForm = () => {
     setIsFormOpen(false);
-    setEditingTipoId(undefined);
+    setEditingCategoriaId(undefined);
     // Refrescar datos después de crear/editar
     refetch();
   };
 
   // Configuración de columnas para la tabla
   const columns = [
-    {
-      key: 'codigo',
-      header: 'Código',
-      className: 'text-left w-20',
-      render: (value: string) => (
-        <span className="text-xs bg-purple-100/20 dark:bg-purple-200/10 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-mono">
-          {value}
-        </span>
-      )
-    },
     {
       key: 'nombre',
       header: 'Nombre',
@@ -121,12 +111,16 @@ export default function TipoSolicitudPagoPage() {
       )
     },
     {
-      key: 'categoria',
-      header: 'Categoría',
+      key: 'tipoUso',
+      header: 'Tipo de Uso',
       className: 'text-left text-xs',
-      render: (value: string) => (
-        <span className="text-xs bg-orange-100/20 dark:bg-orange-200/10 text-orange-400 dark:text-orange-400 px-2 py-1 rounded capitalize font-medium">
-          {value}
+      render: (value: 'pago' | 'documentos_oc') => (
+        <span className={`text-xs px-2 py-1 rounded font-medium capitalize ${
+          value === 'pago' 
+            ? 'bg-blue-100/20 dark:bg-blue-200/10 text-blue-600 dark:text-blue-400'
+            : 'bg-green-100/20 dark:bg-green-200/10 text-green-600 dark:text-green-400'
+        }`}>
+          {value === 'pago' ? 'Pago' : 'Documentos OC'}
         </span>
       )
     },
@@ -134,7 +128,7 @@ export default function TipoSolicitudPagoPage() {
       key: 'permiteMultiple',
       header: 'Múltiple',
       className: 'text-center',
-      render: (value: boolean) => (
+      render: (value?: boolean) => (
         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
           value 
             ? 'text-blue-600 dark:text-blue-400' 
@@ -148,7 +142,7 @@ export default function TipoSolicitudPagoPage() {
       key: 'permiteVincularReportes',
       header: 'Reportes',
       className: 'text-center',
-      render: (value: boolean) => (
+      render: (value?: boolean) => (
         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
           value 
             ? 'text-green-600 dark:text-green-400' 
@@ -190,14 +184,14 @@ export default function TipoSolicitudPagoPage() {
       key: 'acciones',
       header: 'Acciones',
       className: 'w-32 text-center',
-      render: (value: any, row: TipoSolicitudPago) => (
+      render: (value: any, row: CategoriaChecklist) => (
         <div className="flex items-center justify-center gap-1.5">
           <Button
             variant="subtle"
             color="gray"
             size="icon"
             title="Ver detalles"
-            onClick={() => handleViewTipo(row)}
+            onClick={() => handleViewCategoria(row)}
           >
             <Eye className="h-4 w-4" />
           </Button>
@@ -206,7 +200,7 @@ export default function TipoSolicitudPagoPage() {
             color="blue"
             size="icon"
             title="Editar"
-            onClick={() => handleEditTipo(row)}
+            onClick={() => handleEditCategoria(row)}
           >
             <Edit className="h-4 w-4" />
           </Button>
@@ -215,7 +209,7 @@ export default function TipoSolicitudPagoPage() {
             color="red"
             size="icon"
             title="Eliminar"
-            onClick={() => handleDeleteTipo(row)}
+            onClick={() => handleDeleteCategoria(row)}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -228,7 +222,7 @@ export default function TipoSolicitudPagoPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-64 space-y-4">
         <div className="text-red-400 text-sm">
-          Error al cargar los tipos de solicitud de pago: {error.message}
+          Error al cargar las categorías de checklist: {error.message}
         </div>
         <Button onClick={() => refetch()} variant="subtle" color="gray">
           Reintentar
@@ -243,10 +237,10 @@ export default function TipoSolicitudPagoPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-text-primary">
-            Tipos de Solicitud de Pago
+            Categorías de Checklist
           </h1>
           <p className="text-xs text-text-secondary mt-0.5">
-            Gestión de todos los tipos de solicitud de pago del sistema
+            Gestión de categorías de checklist para pagos y documentos OC
           </p>
         </div>
         <Button
@@ -255,7 +249,7 @@ export default function TipoSolicitudPagoPage() {
           icon={<Plus className="h-4 w-4" />}
           onClick={handleOpenCreateForm}
         >
-          Nuevo Tipo
+          Nueva Categoría
         </Button>
       </div>
 
@@ -267,7 +261,7 @@ export default function TipoSolicitudPagoPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-secondary" />
             <Input
               type="text"
-              placeholder="Buscar tipos de solicitud de pago..."
+              placeholder="Buscar categorías de checklist..."
               value={searchQuery}
               onChange={handleSearchChange}
               className="pl-10 text-xs h-8"
@@ -288,11 +282,11 @@ export default function TipoSolicitudPagoPage() {
         </div>
       </div>
 
-      {/* Tabla de Tipos de Solicitud de Pago */}
+      {/* Tabla de Categorías de Checklist */}
       <DataTable
-        data={tiposSolicitudPago}
+        data={categoriasChecklist}
         columns={columns}
-        subtitle={`Total: ${totalCount} tipos de solicitud de pago`}
+        subtitle={`Total: ${totalCount} categorías de checklist`}
         showPagination={true}
         serverPagination={{
           currentPage,
@@ -301,22 +295,22 @@ export default function TipoSolicitudPagoPage() {
           onPageChange: handlePageChange
         }}
         loading={isLoading}
-        emptyMessage="Los tipos de solicitud de pago aparecerán aquí cuando se registren"
+        emptyMessage="Las categorías de checklist aparecerán aquí cuando se registren"
       />
 
       {/* Modal para ver detalles */}
-      <TipoSolicitudPagoView
+      <CategoriaChecklistView
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        tipo={selectedTipo}
+        categoria={selectedCategoria}
         onEdit={handleEditFromView}
       />
 
-      {/* Formulario para crear/editar tipos de solicitud de pago */}
-      <TipoSolicitudPagoForm
+      {/* Formulario para crear/editar categorías de checklist */}
+      <CategoriaChecklistForm
         isOpen={isFormOpen}
         onClose={handleCloseForm}
-        tipoSolicitudPagoId={editingTipoId}
+        categoriaChecklistId={editingCategoriaId}
       />
     </div>
   );

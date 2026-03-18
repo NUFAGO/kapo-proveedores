@@ -19,13 +19,21 @@ export {
   GET_TIPOS_DOCUMENTO_INACTIVOS_QUERY
 } from './tipo-documento.queries';
 
-// Tipo Solicitud Pago queries
+// Categoria Checklist queries
 export {
-  LISTAR_TIPOS_SOLICITUD_PAGO_QUERY,
-  OBTENER_TIPO_SOLICITUD_PAGO_QUERY,
-  FIND_ACTIVOS_SOLICITUD_PAGO_QUERY,
-  FIND_INACTIVOS_SOLICITUD_PAGO_QUERY
-} from './tipo-solicitud-pago.queries';
+  LISTAR_CATEGORIAS_CHECKLIST_QUERY,
+  OBTENER_CATEGORIA_CHECKLIST_QUERY,
+  FIND_ACTIVAS_CATEGORIA_CHECKLIST_QUERY,
+  FIND_INACTIVAS_CATEGORIA_CHECKLIST_QUERY
+} from './categoria-checklist.queries';
+
+// Plantilla Checklist queries
+export {
+  LISTAR_PLANTILLAS_CHECKLIST_QUERY,
+  OBTENER_PLANTILLA_CHECKLIST_QUERY,
+  FIND_ACTIVAS_PLANTILLA_CHECKLIST_QUERY,
+  FIND_INACTIVAS_PLANTILLA_CHECKLIST_QUERY
+} from './plantilla-checklist.queries';
 
 // Upload queries
 export {

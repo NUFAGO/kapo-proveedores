@@ -3,7 +3,7 @@
  *
  * Responsabilidad: Configurar cliente GraphQL para hacer requests
  * Flujo: Importado por hooks → Cliente HTTP para GraphQL
- */
+*/
 
 import { GraphQLClient } from 'graphql-request'
 
@@ -43,45 +43,13 @@ export async function graphqlRequest<T = any>(
     // Obtener token para esta request específica
     const token = getAuthToken();
     
-    // Logging para depuración
-    console.log('🔍 GraphQL Request Debug:');
-    console.log('- Token encontrado:', !!token);
-    console.log('- Token length:', token?.length || 0);
-    console.log('- Token preview:', token ? `${token.substring(0, 20)}...` : 'null');
-    console.log('- Endpoint:', GRAPHQL_ENDPOINT);
-    console.log('- Query:', query.substring(0, 50) + '...');
-    
-    // Decodificar token para verificar contenido
-    if (token) {
-      try {
-        const parts = token.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          console.log('- Token payload:', payload);
-          console.log('- Token expira en:', new Date(payload.exp * 1000).toLocaleString());
-          console.log('- Token expirado:', Date.now() > payload.exp * 1000);
-          console.log('- User ID:', payload.sub || payload.id);
-          console.log('- Tipo usuario:', payload.tipo_usuario);
-        } else {
-          console.log('- ❌ Token no tiene formato JWT válido');
-        }
-      } catch (e) {
-        console.log('- ❌ Error al decodificar token:', e);
-      }
-    }
-    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
     
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
-      console.log('- Authorization header agregado');
-    } else {
-      console.log('- ❌ No hay token para agregar');
     }
-    
-    console.log('- Headers finales:', headers);
     
     const response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',

@@ -121,7 +121,7 @@ export default function PlantillaDocumentoView({ isOpen, onClose, plantilla, onE
         <div className="space-y-2">
           <h3 className="font-bold text-xs">Datos Clave</h3>
           <div className="p-2 rounded-lg border border-border">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
               <div>
                 <label className="block text-xs font-semibold mb-1">Código</label>
                 <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
@@ -132,6 +132,22 @@ export default function PlantillaDocumentoView({ isOpen, onClose, plantilla, onE
                 <label className="block text-xs font-semibold mb-1">Tipo Documento</label>
                 <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
                   {plantilla.tipoDocumento?.nombre || plantilla.tipoDocumentoId || "-"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">Formatos Permitidos</label>
+                <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
+                  {plantilla.formatosPermitidos ? (
+                    <div className="flex flex-wrap gap-1">
+                      {plantilla.formatosPermitidos.split(',').map((formato, index) => (
+                        <span key={index} className="px-1 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 rounded text-xs uppercase">
+                          {formato.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-500">Sin restricciones</span>
+                  )}
                 </div>
               </div>
               <div>

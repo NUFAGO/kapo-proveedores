@@ -4,26 +4,26 @@ import React from 'react';
 import { Button } from '@/components/ui';
 import Modal from '@/components/ui/modal';
 import { Edit, CheckCircle, XCircle, Tag, Calendar, Clock, FileText } from 'lucide-react';
-import type { TipoSolicitudPago } from '@/hooks/useTipoSolicitudPago';
+import type { CategoriaChecklist } from '@/hooks/useCategoriaChecklist';
 
-interface TipoSolicitudPagoViewProps {
+interface CategoriaChecklistViewProps {
   isOpen: boolean;
   onClose: () => void;
-  tipo: TipoSolicitudPago | null;
-  onEdit?: (tipo: TipoSolicitudPago) => void;
+  categoria: CategoriaChecklist | null;
+  onEdit?: (categoria: CategoriaChecklist) => void;
 }
 
-export default function TipoSolicitudPagoView({
+export default function CategoriaChecklistView({
   isOpen,
   onClose,
-  tipo,
+  categoria,
   onEdit
-}: TipoSolicitudPagoViewProps) {
-  if (!tipo) return null;
+}: CategoriaChecklistViewProps) {
+  if (!categoria) return null;
 
   const handleEdit = () => {
     if (onEdit) {
-      onEdit(tipo);
+      onEdit(categoria);
     }
     onClose();
   };
@@ -32,6 +32,12 @@ export default function TipoSolicitudPagoView({
     return estado === 'activo' 
       ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
       : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+  };
+
+  const getTipoUsoColor = (tipoUso: string) => {
+    return tipoUso === 'pago' 
+      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+      : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
   };
 
   return (
@@ -43,14 +49,14 @@ export default function TipoSolicitudPagoView({
           <FileText className="w-5 h-5 text-primary" />
           <div>
             <span className="text-sm font-semibold text-text-primary">
-              {tipo.nombre || 'Tipo de Solicitud de Pago'}
+              {categoria.nombre || 'Categoría de Checklist'}
             </span>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-muted-foreground">
-                Código: {tipo.codigo}
+              <span className={`text-xs px-2 py-1 rounded ${getTipoUsoColor(categoria.tipoUso)}`}>
+                {categoria.tipoUso === 'pago' ? 'Pago' : 'Documentos OC'}
               </span>
-              <span className={`text-xs px-2 py-1 rounded ${getEstadoColor(tipo.estado)}`}>
-                {tipo.estado === 'activo' ? 'Activo' : 'Inactivo'}
+              <span className={`text-xs px-2 py-1 rounded ${getEstadoColor(categoria.estado)}`}>
+                {categoria.estado === 'activo' ? 'Activo' : 'Inactivo'}
               </span>
             </div>
           </div>
@@ -87,9 +93,9 @@ export default function TipoSolicitudPagoView({
               <div className="flex items-center gap-2 p-2 border border-border rounded">
                 <Tag className="w-5 h-5 text-primary flex-shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold truncate">{tipo.nombre || "-"}</div>
+                  <div className="text-xs font-semibold truncate">{categoria.nombre || "-"}</div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {tipo.descripcion || "Sin descripción"}
+                    {categoria.descripcion || "Sin descripción"}
                   </div>
                 </div>
               </div>
@@ -97,9 +103,9 @@ export default function TipoSolicitudPagoView({
               <div className="flex items-center gap-2 p-2 border border-border rounded">
                 <FileText className="w-5 h-5 text-primary flex-shrink-0" />
                 <div className="min-w-0">
-                  <div className="text-xs font-semibold truncate">Categoría</div>
+                  <div className="text-xs font-semibold truncate">Tipo de Uso</div>
                   <div className="text-xs text-muted-foreground truncate capitalize">
-                    {tipo.categoria}
+                    {categoria.tipoUso === 'pago' ? 'Pago' : 'Documentos OC'}
                   </div>
                 </div>
               </div>
@@ -109,7 +115,7 @@ export default function TipoSolicitudPagoView({
                 <div className="min-w-0">
                   <div className="text-xs font-semibold truncate">Estado</div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {tipo.estado === 'activo' ? 'Disponible para uso' : 'No disponible'}
+                    {categoria.estado === 'activo' ? 'Disponible para uso' : 'No disponible'}
                   </div>
                 </div>
               </div>
@@ -123,27 +129,27 @@ export default function TipoSolicitudPagoView({
           <div className="p-2 rounded-lg border border-border">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
               <div>
-                <label className="block text-xs font-semibold mb-1">Código</label>
+                <label className="block text-xs font-semibold mb-1">Nombre</label>
                 <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
-                  {tipo.codigo || "-"}
+                  {categoria.nombre || "-"}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1">Categoría</label>
-                <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded capitalize">
-                  {tipo.categoria}
+                <label className="block text-xs font-semibold mb-1">Tipo de Uso</label>
+                <div className={`text-xs font-medium p-1 rounded capitalize ${getTipoUsoColor(categoria.tipoUso)}`}>
+                  {categoria.tipoUso === 'pago' ? 'Pago' : 'Documentos OC'}
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1">Estado</label>
-                <div className={`text-xs font-medium p-1 rounded ${getEstadoColor(tipo.estado)}`}>
-                  {tipo.estado === 'activo' ? 'Activo' : 'Inactivo'}
+                <div className={`text-xs font-medium p-1 rounded ${getEstadoColor(categoria.estado)}`}>
+                  {categoria.estado === 'activo' ? 'Activo' : 'Inactivo'}
                 </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1">Creado</label>
                 <div className="text-xs font-medium text-text-secondary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
-                  {new Date(tipo.fechaCreacion).toLocaleDateString('es-ES', {
+                  {new Date(categoria.fechaCreacion).toLocaleDateString('es-ES', {
                     day: '2-digit',
                     month: 'short',
                     year: 'numeric'
@@ -154,37 +160,57 @@ export default function TipoSolicitudPagoView({
           </div>
         </div>
 
-        {/* Configuración */}
-        <div className="space-y-2">
-          <h3 className="font-bold text-xs">Configuración</h3>
-          <div className="p-2 rounded-lg border border-border">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <div className="flex items-center gap-2 p-2 border border-border rounded">
-                <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
-                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">M</span>
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold">Permite Múltiple</div>
-                  <div className="text-xs text-muted-foreground">
-                    {tipo.permiteMultiple ? 'Sí, permite múltiples solicitudes' : 'No, solo una solicitud'}
+        {/* Configuración - solo para tipoUso = 'pago' */}
+        {categoria.tipoUso === 'pago' && (
+          <div className="space-y-2">
+            <h3 className="font-bold text-xs">Configuración de Pagos</h3>
+            <div className="p-2 rounded-lg border border-border">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div className="flex items-center gap-2 p-2 border border-border rounded">
+                  <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
+                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">M</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold">Permite Múltiple</div>
+                    <div className="text-xs text-muted-foreground">
+                      {categoria.permiteMultiple ? 'Sí, permite múltiples solicitudes' : 'No, solo una solicitud'}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-2 p-2 border border-border rounded">
-                <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
-                  <span className="text-xs font-bold text-green-600 dark:text-green-400">R</span>
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold">Vincular Reportes</div>
-                  <div className="text-xs text-muted-foreground">
-                    {tipo.permiteVincularReportes ? 'Sí, permite vincular reportes' : 'No, no permite vincular'}
+                
+                <div className="flex items-center gap-2 p-2 border border-border rounded">
+                  <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
+                    <span className="text-xs font-bold text-green-600 dark:text-green-400">R</span>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold">Vincular Reportes</div>
+                    <div className="text-xs text-muted-foreground">
+                      {categoria.permiteVincularReportes ? 'Sí, permite vincular reportes' : 'No, no permite vincular'}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Nota para tipoUso = 'documentos_oc' */}
+        {categoria.tipoUso === 'documentos_oc' && (
+          <div className="space-y-2">
+            <h3 className="font-bold text-xs">Configuración de Documentos OC</h3>
+            <div className="p-2 rounded-lg border border-border bg-green-50/50 dark:bg-green-900/20">
+              <div className="flex items-center gap-2">
+                <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
+                  <FileText className="w-3 h-3 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="text-xs text-green-700 dark:text-green-300">
+                  Esta categoría está configurada para checklists de documentos OC. 
+                  No aplica configuración de múltiples solicitudes o vinculación de reportes.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Fechas del Registro */}
         <div className="space-y-2">
@@ -198,7 +224,7 @@ export default function TipoSolicitudPagoView({
                 <div className="min-w-0">
                   <div className="text-xs font-semibold">Fecha Creación</div>
                   <div className="text-xs text-muted-foreground">
-                    {new Date(tipo.fechaCreacion).toLocaleDateString('es-ES', {
+                    {new Date(categoria.fechaCreacion).toLocaleDateString('es-ES', {
                       day: '2-digit',
                       month: 'long',
                       year: 'numeric',
@@ -209,7 +235,7 @@ export default function TipoSolicitudPagoView({
                 </div>
               </div>
               
-              {tipo.fechaActualizacion && (
+              {categoria.fechaActualizacion && (
                 <div className="flex items-center gap-2 p-2 border border-border rounded">
                   <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
                     <span className="text-xs font-bold text-green-600 dark:text-green-400">UA</span>
@@ -217,7 +243,7 @@ export default function TipoSolicitudPagoView({
                   <div className="min-w-0">
                     <div className="text-xs font-semibold">Última Actualización</div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(tipo.fechaActualizacion).toLocaleDateString('es-ES', {
+                      {new Date(categoria.fechaActualizacion).toLocaleDateString('es-ES', {
                         day: '2-digit',
                         month: 'long',
                         year: 'numeric',
