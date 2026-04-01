@@ -12,9 +12,6 @@ export const LISTAR_PLANTILLAS_CHECKLIST_QUERY = `
           nombre
           tipoUso
         }
-        version
-        plantillaBaseId
-        vigente
         activo
         fechaCreacion
         fechaActualizacion
@@ -25,11 +22,17 @@ export const LISTAR_PLANTILLAS_CHECKLIST_QUERY = `
           formularioId
           obligatorio
           orden
+          activo
           plantillaDocumento {
             id
+            codigo
             tipoDocumentoId
             nombrePlantilla
+            plantillaUrl
             formatosPermitidos
+            activo
+            fechaCreacion
+            fechaActualizacion
           }
         }
       }
@@ -50,8 +53,6 @@ export const OBTENER_PLANTILLA_CHECKLIST_QUERY = `
         nombre
         tipoUso
       }
-      version
-      plantillaBaseId
       activo
       fechaCreacion
       fechaActualizacion
@@ -62,10 +63,17 @@ export const OBTENER_PLANTILLA_CHECKLIST_QUERY = `
         formularioId
         obligatorio
         orden
+        activo
         plantillaDocumento {
           id
+          codigo
           tipoDocumentoId
           nombrePlantilla
+          plantillaUrl
+          formatosPermitidos
+          activo
+          fechaCreacion
+          fechaActualizacion
         }
       }
     }
@@ -84,8 +92,6 @@ export const FIND_ACTIVAS_PLANTILLA_CHECKLIST_QUERY = `
         nombre
         tipoUso
       }
-      version
-      plantillaBaseId
       activo
       fechaCreacion
       fechaActualizacion
@@ -96,10 +102,17 @@ export const FIND_ACTIVAS_PLANTILLA_CHECKLIST_QUERY = `
         formularioId
         obligatorio
         orden
+        activo
         plantillaDocumento {
           id
+          codigo
           tipoDocumentoId
           nombrePlantilla
+          plantillaUrl
+          formatosPermitidos
+          activo
+          fechaCreacion
+          fechaActualizacion
         }
       }
     }
@@ -119,9 +132,6 @@ export const FIND_INACTIVAS_PLANTILLA_CHECKLIST_QUERY = `
         nombre
         tipoUso
       }
-      version
-      plantillaBaseId
-      vigente
       activo
       fechaCreacion
       fechaActualizacion
@@ -132,92 +142,17 @@ export const FIND_INACTIVAS_PLANTILLA_CHECKLIST_QUERY = `
         formularioId
         obligatorio
         orden
+        activo
         plantillaDocumento {
           id
+          codigo
           tipoDocumentoId
           nombrePlantilla
-        }
-      }
-    }
-  }
-`;
-
-export const FIND_VIGENTES_PLANTILLA_CHECKLIST_QUERY = `
-  query FindVigentesPlantillaChecklist {
-    findVigentesPlantillaChecklist {
-      id
-      codigo
-      nombre
-      descripcion
-      categoriaChecklistId
-      categoria {
-        id
-        nombre
-        tipoUso
-      }
-      version
-      plantillaBaseId
-      vigente
-      activo
-      fechaCreacion
-      fechaActualizacion
-    }
-  }
-`;
-
-export const OBTENER_VERSIONES_POR_CODIGO_QUERY = `
-  query ObtenerVersionesPorCodigo($codigo: String!) {
-    obtenerVersionesPorCodigo(codigo: $codigo) {
-      id
-      codigo
-      nombre
-      descripcion
-      categoriaChecklistId
-      categoria {
-        id
-        nombre
-        tipoUso
-      }
-      version
-      plantillaBaseId
-      vigente
-      activo
-      fechaCreacion
-      fechaActualizacion
-    }
-  }
-`;
-
-export const OBTENER_VERSION_VIGENTE_POR_CODIGO_QUERY = `
-  query ObtenerVersionVigentePorCodigo($codigo: String!) {
-    obtenerVersionVigentePorCodigo(codigo: $codigo) {
-      id
-      codigo
-      nombre
-      descripcion
-      categoriaChecklistId
-      categoria {
-        id
-        nombre
-        tipoUso
-      }
-      version
-      plantillaBaseId
-      vigente
-      activo
-      fechaCreacion
-      fechaActualizacion
-      requisitos {
-        id
-        tipoRequisito
-        plantillaDocumentoId
-        formularioId
-        obligatorio
-        orden
-        plantillaDocumento {
-          id
-          tipoDocumentoId
-          nombrePlantilla
+          plantillaUrl
+          formatosPermitidos
+          activo
+          fechaCreacion
+          fechaActualizacion
         }
       }
     }

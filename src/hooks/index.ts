@@ -68,11 +68,13 @@ export {
   useCrearPlantillaChecklist,
   useActualizarPlantillaChecklist,
   useEliminarPlantillaChecklist,
+  useGuardarPlantillaChecklist,
   type PlantillaChecklist,
   type PlantillaChecklistInput,
   type PlantillaChecklistFiltros,
   type PlantillaChecklistConnection,
-  type RequisitoDocumento
+  type RequisitoDocumento,
+  type RequisitoDocumentoInput
 } from './usePlantillaChecklist';
 
 // Hooks de plantillas de documento
@@ -93,3 +95,63 @@ export {
   type BatchUploadResult,
   type UploadConfigResponse
 } from './useUpload';
+
+// Hooks de órdenes de compra
+export {
+  useOrdenesCompra,
+  type OrdenCompra,
+  type OrdenCompraFilter,
+  type OrdenCompraPaginatedResponse
+} from './useOrdenCompra';
+
+// Hooks de expedientes de pago
+export {
+  useExpedientesPago,
+  useExpedientePago,
+  useExpedientePorOcId,
+  useExpedientesPorProveedor,
+  useCrearExpedientePago,
+  useConfigurarExpediente,
+  useActualizarEstadoExpediente,
+  useActualizarSaldosExpediente,
+  useEliminarExpedientePago,
+  type ExpedientePago,
+  type ExpedientePagoInput,
+  type ExpedientePagoFilter,
+  type ExpedientePagoPaginatedResponse
+} from './useExpedientePago';
+
+// Hooks de tipos de pago OC
+export {
+  useTiposPagoOC,
+  useTipoPagoOC,
+  useTiposPagoPorExpediente,
+  useValidarCreacionSolicitud,
+  useCrearTipoPagoOC,
+  useActualizarTipoPagoOC,
+  useEliminarTipoPagoOC,
+  type TipoPagoOC,
+  type TipoPagoOCInput,
+  type TipoPagoOCFilter,
+  type ValidarCreacionSolicitudInput,
+  type ValidacionSolicitudResponse
+} from './useTipoPagoOC';
+
+// Hooks de documentos OC
+export {
+  useDocumentosOC,
+  useDocumentoOC,
+  useDocumentosPorExpediente,
+  useVerificarDocumentosObligatoriosAprobados,
+  useDocumentosObligatoriosPendientes,
+  useCrearDocumentoOC,
+  useSubirArchivosDocumento,
+  useAprobarDocumentoOC,
+  useObservarDocumentoOC,
+  useActualizarDocumentoOC,
+  useEliminarDocumentoOC,
+  type DocumentoOC,
+  type DocumentoOCInput,
+  type DocumentoOCFilter,
+  type ArchivoInput
+} from './useDocumentoOC';

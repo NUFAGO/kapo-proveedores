@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useSidebar } from '@/context/sidebar-context';
 import { useTheme } from '@/context/theme-context';
 import { useAuth, useAuthProveedor } from '@/hooks';
-import { 
+import {
   MdDashboard,
   MdAssignment,
   MdShoppingCart,
@@ -22,7 +22,7 @@ import {
 } from 'react-icons/md';
 import { TbTemplateFilled } from "react-icons/tb";
 import { LuClipboardList } from "react-icons/lu";
-import { FaFileInvoiceDollar  } from 'react-icons/fa6';
+import { FaFileInvoiceDollar } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -73,25 +73,21 @@ const adminNavItems: NavItem[] = [
         icon: MdDescription,
       },
       {
-        name: 'Categorías Checklist',
-        href: '/configuracion/categorias-checklist',
-        icon: MdChecklist,
-      },
-      {
-        name: 'Checklists y Plantillas',
-        href: '/configuracion/checklist',
-        icon: MdFileUpload,
-      },
-      {
         name: 'Plantillas Documento',
         href: '/configuracion/plantillas-documento',
         icon: TbTemplateFilled,
       },
       {
-        name: 'Checklists y Requisitos',
-        href: '/configuracion/checklists-requisitos',
+        name: 'Categorías Checklist',
+        href: '/configuracion/categorias-checklist',
         icon: MdChecklist,
       },
+      {
+        name: 'Checklists y Documentos',
+        href: '/configuracion/checklist',
+        icon: LuClipboardList,
+      },
+
     ],
   },
 ];
@@ -289,11 +285,11 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
               const Icon = item.icon;
               const hasSubItems = item.subItems && item.subItems.length > 0;
               const isExpanded = expandedItems.has(item.name);
-              
+
               // Si tiene subitems, mostrar como menú desplegable
               if (hasSubItems) {
                 const hasActiveSubItem = item.subItems!.some((subItem) => isRouteActive(subItem.href));
-                
+
                 // Cuando está colapsado, mostrar directamente los subItems (sin el grupo padre)
                 if (isCollapsed && !isMobile) {
                   return (
@@ -329,7 +325,7 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                     </div>
                   );
                 }
-                
+
                 // Cuando está expandido, mostrar el grupo padre con subItems
                 return (
                   <div key={item.name} className="flex flex-col">
@@ -363,7 +359,7 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                         <MdExpandMore className="w-4 h-4 flex-shrink-0" />
                       )}
                     </button>
-                    
+
                     {/* Subitems */}
                     {isExpanded && (
                       <div className="ml-4 mt-1 space-y-1">
@@ -405,10 +401,10 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                   </div>
                 );
               }
-              
+
               // Si no tiene subitems, mostrar como link normal
               const active = item.href ? isRouteActive(item.href) : false;
-              
+
               return (
                 <Link
                   key={item.href || item.name}

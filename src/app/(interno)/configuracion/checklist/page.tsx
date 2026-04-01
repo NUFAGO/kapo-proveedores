@@ -155,6 +155,69 @@ export default function PlantillaChecklistPage() {
     return 'from-purple-500/50 to-purple-600/90';
   };
 
+  // Skeleton para las cards
+  const SkeletonCard = () => (
+    <div className="bg-white dark:bg-gray-900/20 group relative rounded-md card-shadow-hover overflow-hidden animate-pulse">
+      {/* Header con gradiente */}
+      <div className="h-1 bg-linear-to-r from-gray-300 dark:from-gray-600 to-gray-300 dark:to-gray-600" />
+
+      <div className="p-3">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gray-300 dark:bg-gray-600" />
+            <div className="flex-1">
+              <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-1 w-3/4" />
+              <div className="flex items-center gap-2">
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-8" />
+                <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-12" />
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1">
+            <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded" />
+            <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded" />
+          </div>
+        </div>
+
+        {/* Descripción */}
+        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-2 w-full" />
+        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded mb-4 w-2/3" />
+
+        {/* Categoría */}
+        <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full" />
+            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-20" />
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full" />
+            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-16" />
+          </div>
+        </div>
+
+        {/* Expandible */}
+        <div className="border-t border-gray-100 dark:border-gray-700">
+          <div className="w-full flex items-center justify-between p-3">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded" />
+              <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-12" />
+            </div>
+            <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-6" />
+          </div>
+        </div>
+
+        {/* Footer actions */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-8 bg-gray-300 dark:bg-gray-600 rounded" />
+          <div className="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+
   // Vista Grid - Cards modernas
   const PlantillaCard = ({ plantilla }: { plantilla: PlantillaChecklist }) => {
     const isExpanded = expandedCards.has(plantilla.id);
@@ -163,23 +226,20 @@ export default function PlantillaChecklistPage() {
     return (
       <div className={`bg-white dark:bg-gray-900/20 group relative rounded-md card-shadow-hover overflow-hidden`}>
         {/* Header con gradiente */}
-        <div className='h-1 bg-gradient-to-r from-purple-500/30 to-blue-400/30 dark:from-purple-600/20 dark:to- -500/20' />
+        <div className='h-1 bg-linear-to-r from-purple-500/30 to-blue-400/30 dark:from-purple-600/20 dark:to- -500/20' />
 
         <div className="p-3">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${getPlantillaColor(plantilla.categoria?.nombre || '')} flex items-center justify-center text-white`}>
+              <div className={`w-8 h-8 rounded-lg bg-linear-to-r ${getPlantillaColor(plantilla.categoria?.nombre || '')} flex items-center justify-center text-white`}>
                 {getPlantillaIcon(plantilla.categoria?.nombre || '')}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1 line-clamp-2">
                   {plantilla.nombre}
                 </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    v{plantilla.version}
-                  </span>
+                <div className="flex items-center">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                     isActive 
                       ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
@@ -227,7 +287,7 @@ export default function PlantillaChecklistPage() {
             </div>
             <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
               <FiCheckSquare className="w-3 h-3" />
-              <span>{plantilla.requisitos?.length || 0} requisitos</span>
+              <span>{plantilla.requisitos?.filter((req: any) => req.activo).length || 0} requisitos</span>
             </div>
           </div>
 
@@ -241,29 +301,35 @@ export default function PlantillaChecklistPage() {
                 {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                 Requisitos
               </span>
-              <span className='text-xs'>{plantilla.requisitos?.length || 0}</span>
+              <span className='text-xs'>{plantilla.requisitos?.filter((req: any) => req.activo).length || 0}</span>
             </button>
             
             {isExpanded && (
               <div className="pb-3 px-3 space-y-2">
-                {plantilla.requisitos?.slice(0, 3).map((requisito: any, index: number) => (
-                  <div key={index} className="flex items-center gap-2 text-xs">
-                    <div className={`w-2 h-2 rounded-full ${
-                      requisito.obligatorio ? 'bg-red-400' : 'bg-gray-300'
-                    }`} />
-                    <span className="text-gray-600 dark:text-gray-300 truncate">
-                      {requisito.tipoDocumento?.nombre || 'Requisito'}
-                    </span>
-                    {requisito.obligatorio && (
-                      <AlertCircle className="w-3 h-3 text-red-400" />
-                    )}
-                  </div>
-                ))}
-                {(plantilla.requisitos?.length || 0) > 3 && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
-                    +{(plantilla.requisitos?.length || 0) - 3} más...
-                  </div>
-                )}
+                {(() => {
+                  const requisitosActivos = plantilla.requisitos?.filter((req: any) => req.activo) || [];
+                  return requisitosActivos.slice(0, 3).map((requisito: any, index: number) => (
+                    <div key={index} className="flex items-center gap-2 text-xs">
+                      <div className={`w-2 h-2 rounded-full ${
+                        requisito.obligatorio ? 'bg-red-400' : 'bg-gray-300'
+                      }`} />
+                      <span className="text-gray-600 dark:text-gray-300 truncate">
+                        {requisito.plantillaDocumento?.nombrePlantilla || 'Requisito'}
+                      </span>
+                      {requisito.obligatorio && (
+                        <AlertCircle className="w-3 h-3 text-red-400" />
+                      )}
+                    </div>
+                  ));
+                })()}
+                {(() => {
+                  const requisitosActivos = plantilla.requisitos?.filter((req: any) => req.activo) || [];
+                  return requisitosActivos.length > 3 && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 pt-1">
+                      +{requisitosActivos.length - 3} más...
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
@@ -422,10 +488,18 @@ export default function PlantillaChecklistPage() {
               ref={scrollContainerRef}
               className="overflow-y-auto -mb-6 px-2 pt-1"
             >
-              <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4">
-                {plantillasChecklist.map((plantilla: PlantillaChecklist) => (
-                  <PlantillaCard key={plantilla.id} plantilla={plantilla} />
-                ))}
+              <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4 items-start">
+                {isLoading ? (
+                  // Mostrar skeletons mientras carga
+                  Array.from({ length: 6 }).map((_, index) => (
+                    <SkeletonCard key={`skeleton-${index}`} />
+                  ))
+                ) : (
+                  // Mostrar las plantillas reales
+                  plantillasChecklist.map((plantilla: PlantillaChecklist) => (
+                    <PlantillaCard key={plantilla.id} plantilla={plantilla} />
+                  ))
+                )}
               </div>
               
               {/* Indicador de carga para scroll infinito */}
@@ -450,12 +524,11 @@ export default function PlantillaChecklistPage() {
                 header: 'Nombre',
                 render: (value: string, row: PlantillaChecklist) => (
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${getPlantillaColor(row.categoria?.nombre || '')} flex items-center justify-center text-white`}>
+                    <div className={`w-8 h-8 rounded-lg bg-linear-to-r ${getPlantillaColor(row.categoria?.nombre || '')} flex items-center justify-center text-white`}>
                       {getPlantillaIcon(row.categoria?.nombre || '')}
                     </div>
-                    <div className='flex gap-3'>
+                    <div className='flex'>
                       <div className="font-semibold text-xs">{value}</div>
-                      <div className="text-xs text-gray-500">v{row.version}</div>
                     </div>
                   </div>
                 )

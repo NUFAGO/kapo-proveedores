@@ -4,16 +4,13 @@ import {
   LISTAR_PLANTILLAS_CHECKLIST_QUERY,
   OBTENER_PLANTILLA_CHECKLIST_QUERY,
   FIND_ACTIVAS_PLANTILLA_CHECKLIST_QUERY,
-  FIND_INACTIVAS_PLANTILLA_CHECKLIST_QUERY,
-  FIND_VIGENTES_PLANTILLA_CHECKLIST_QUERY,
-  OBTENER_VERSIONES_POR_CODIGO_QUERY,
-  OBTENER_VERSION_VIGENTE_POR_CODIGO_QUERY
+  FIND_INACTIVAS_PLANTILLA_CHECKLIST_QUERY
 } from '@/graphql/queries/plantilla-checklist.queries'
 import {
   CREATE_PLANTILLA_CHECKLIST_MUTATION as CREATE_MUTATION,
   UPDATE_PLANTILLA_CHECKLIST_MUTATION as UPDATE_MUTATION,
   DELETE_PLANTILLA_CHECKLIST_MUTATION as DELETE_MUTATION,
-  CREAR_NUEVA_VERSION_MUTATION
+  GUARDAR_PLANTILLA_CHECKLIST_MUTATION as GUARDAR_MUTATION
 } from '@/graphql/mutations/plantilla-checklist.mutations'
 
 export interface PlantillaChecklist {
@@ -27,9 +24,6 @@ export interface PlantillaChecklist {
     nombre: string
     tipoUso: string
   }
-  version: number
-  plantillaBaseId: string
-  vigente: boolean
   activo: boolean
   fechaCreacion: string
   fechaActualizacion?: string
@@ -48,19 +42,29 @@ export interface PlantillaFormulario {
 
 export interface RequisitoDocumento {
   id: string
+  checklistId: string
   tipoRequisito: 'documento' | 'formulario'
   plantillaDocumentoId?: string
   formularioId?: string
   obligatorio: boolean
   orden: number
+  activo: boolean
   plantillaDocumento?: {
     id: string
-    tipoDocumento: {
+    codigo: string
+    tipoDocumentoId: string
+    nombrePlantilla: string
+    plantillaUrl?: string
+    formatosPermitidos?: string
+    activo: boolean
+    fechaCreacion: string
+    fechaActualizacion?: string
+    tipoDocumento?: {
+      id: string
       codigo: string
       nombre: string
       descripcion: string
     }
-    formatosPermitidos?: string
   }
   formulario?: PlantillaFormulario
 }
@@ -70,9 +74,6 @@ export interface PlantillaChecklistInput {
   nombre: string
   descripcion?: string
   categoriaChecklistId: string
-  version?: number
-  plantillaBaseId?: string
-  vigente?: boolean
   activo: boolean
 }
 
@@ -81,12 +82,23 @@ export interface PlantillaChecklistFiltros {
   nombre?: string
   categoriaChecklistId?: string
   activo?: boolean
-  vigente?: boolean
 }
 
 export interface PlantillaChecklistConnection {
   plantillasChecklist: PlantillaChecklist[]
   totalCount: number
+}
+
+export interface RequisitoDocumentoInput {
+  id?: string;
+  checklistId: string
+  tipoRequisito: 'documento' | 'formulario'
+  plantillaDocumentoId?: string
+  formularioId?: string
+  obligatorio: boolean
+  formatosPermitidos?: string
+  orden: number
+  activo?: boolean
 }
 
 // Hook para listar plantillas de checklist con paginación y filtros
@@ -96,7 +108,7 @@ export function usePlantillasChecklist(filters?: PlantillaChecklistFiltros, limi
     queryFn: async () => {
       const response = await graphqlRequest(
         LISTAR_PLANTILLAS_CHECKLIST_QUERY,
-        { limit, offset, filters }
+        { limit, offset, filtros: filters }
       );
       return response.listarPlantillasChecklist;
     },
@@ -111,7 +123,7 @@ export function usePlantillasChecklistInfinite(filters?: PlantillaChecklistFiltr
     queryFn: async ({ pageParam = 0 }) => {
       const response = await graphqlRequest(
         LISTAR_PLANTILLAS_CHECKLIST_QUERY,
-        { limit, offset: pageParam, filters }
+        { limit, offset: pageParam, filtros: filters }
       );
       return {
         data: response.listarPlantillasChecklist.plantillasChecklist,
@@ -175,63 +187,6 @@ export function usePlantillasChecklistInactivas() {
   })
 }
 
-// Hook para obtener plantillas de checklist vigentes
-export function usePlantillasChecklistVigentes() {
-  return useQuery({
-    queryKey: ['plantillasChecklist', 'vigentes'],
-    queryFn: async () => {
-      const response = await graphqlRequest(FIND_VIGENTES_PLANTILLA_CHECKLIST_QUERY);
-      return response.findVigentesPlantillaChecklist;
-    },
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-// Hooks para versionamiento
-export function useVersionesPorCodigo(codigo: string) {
-  return useQuery({
-    queryKey: ['versionesPorCodigo', codigo],
-    queryFn: async () => {
-      if (!codigo) return [];
-      const response = await graphqlRequest(OBTENER_VERSIONES_POR_CODIGO_QUERY, { codigo });
-      return response.obtenerVersionesPorCodigo;
-    },
-    enabled: !!codigo,
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-export function useVersionVigentePorCodigo(codigo: string) {
-  return useQuery({
-    queryKey: ['versionVigentePorCodigo', codigo],
-    queryFn: async () => {
-      if (!codigo) return null;
-      const response = await graphqlRequest(OBTENER_VERSION_VIGENTE_POR_CODIGO_QUERY, { codigo });
-      return response.obtenerVersionVigentePorCodigo;
-    },
-    enabled: !!codigo,
-    staleTime: 5 * 60 * 1000,
-  })
-}
-
-export function useCrearNuevaVersion() {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: async (checklistId: string) => {
-      const response = await graphqlRequest(CREAR_NUEVA_VERSION_MUTATION, { checklistId });
-      return response.crearNuevaVersion;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plantillasChecklist'] })
-      queryClient.invalidateQueries({ queryKey: ['versionesPorCodigo'] })
-    },
-    onError: (error) => {
-      console.error('Error creando nueva versión:', error)
-    }
-  })
-}
-
 // Hook para crear una plantilla de checklist
 export function useCrearPlantillaChecklist() {
   const queryClient = useQueryClient()
@@ -292,6 +247,42 @@ export function useEliminarPlantillaChecklist() {
     },
     onError: (error) => {
       console.error('Error eliminando plantilla de checklist:', error)
+    }
+  })
+}
+
+// Hook para guardar plantilla de checklist (crear o actualizar)
+export function useGuardarPlantillaChecklist() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string;
+      datosPlantilla: PlantillaChecklistInput;
+      requisitos: RequisitoDocumentoInput[];
+      requisitosActualizar: Array<{ 
+        id: string; 
+        checklistId?: string | undefined; 
+        tipoRequisito?: "documento" | "formulario" | undefined; 
+        plantillaDocumentoId?: string | undefined; 
+        formularioId?: string | undefined; 
+        obligatorio?: boolean | undefined; 
+        orden?: number | undefined; 
+        activo?: boolean | undefined; 
+      }>;
+      requisitosDesactivar: string[];
+    }) => {
+      const response = await graphqlRequest(GUARDAR_MUTATION, { input });
+      return response.guardarPlantillaChecklist;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['plantillasChecklist'] })
+      if (variables.id) {
+        queryClient.invalidateQueries({ queryKey: ['plantillaChecklist', variables.id] })
+      }
+    },
+    onError: (error) => {
+      console.error('Error guardando plantilla de checklist:', error)
     }
   })
 }

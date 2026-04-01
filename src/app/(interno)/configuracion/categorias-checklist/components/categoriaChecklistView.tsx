@@ -91,7 +91,7 @@ export default function CategoriaChecklistView({
           <div className="p-2 rounded-lg border border-border">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <div className="flex items-center gap-2 p-2 border border-border rounded">
-                <Tag className="w-5 h-5 text-primary flex-shrink-0" />
+                <Tag className="w-5 h-5 text-primary shrink-0" />
                 <div className="min-w-0">
                   <div className="text-xs font-semibold truncate">{categoria.nombre || "-"}</div>
                   <div className="text-xs text-muted-foreground truncate">
@@ -101,7 +101,7 @@ export default function CategoriaChecklistView({
               </div>
               
               <div className="flex items-center gap-2 p-2 border border-border rounded">
-                <FileText className="w-5 h-5 text-primary flex-shrink-0" />
+                <FileText className="w-5 h-5 text-primary shrink-0" />
                 <div className="min-w-0">
                   <div className="text-xs font-semibold truncate">Tipo de Uso</div>
                   <div className="text-xs text-muted-foreground truncate capitalize">
@@ -111,7 +111,7 @@ export default function CategoriaChecklistView({
               </div>
               
               <div className="flex items-center gap-2 p-2 border border-border rounded">
-                <CheckCircle className="w-5 h-5 text-primary flex-shrink-0" />
+                <CheckCircle className="w-5 h-5 text-primary shrink-0" />
                 <div className="min-w-0">
                   <div className="text-xs font-semibold truncate">Estado</div>
                   <div className="text-xs text-muted-foreground truncate">
@@ -167,7 +167,7 @@ export default function CategoriaChecklistView({
             <div className="p-2 rounded-lg border border-border">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="flex items-center gap-2 p-2 border border-border rounded">
-                  <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
+                  <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 shrink-0">
                     <span className="text-xs font-bold text-blue-600 dark:text-blue-400">M</span>
                   </div>
                   <div className="min-w-0">
@@ -179,7 +179,7 @@ export default function CategoriaChecklistView({
                 </div>
                 
                 <div className="flex items-center gap-2 p-2 border border-border rounded">
-                  <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
+                  <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 shrink-0">
                     <span className="text-xs font-bold text-green-600 dark:text-green-400">R</span>
                   </div>
                   <div className="min-w-0">
@@ -200,7 +200,7 @@ export default function CategoriaChecklistView({
             <h3 className="font-bold text-xs">Configuración de Documentos OC</h3>
             <div className="p-2 rounded-lg border border-border bg-green-50/50 dark:bg-green-900/20">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
+                <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 shrink-0">
                   <FileText className="w-3 h-3 text-green-600 dark:text-green-400" />
                 </div>
                 <div className="text-xs text-green-700 dark:text-green-300">
@@ -218,7 +218,7 @@ export default function CategoriaChecklistView({
           <div className="p-2 rounded-lg border border-border">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div className="flex items-center gap-2 p-2 border border-border rounded">
-                <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
+                <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 shrink-0">
                   <span className="text-xs font-bold text-blue-600 dark:text-blue-400">FC</span>
                 </div>
                 <div className="min-w-0">
@@ -237,7 +237,7 @@ export default function CategoriaChecklistView({
               
               {categoria.fechaActualizacion && (
                 <div className="flex items-center gap-2 p-2 border border-border rounded">
-                  <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 flex-shrink-0">
+                  <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 shrink-0">
                     <span className="text-xs font-bold text-green-600 dark:text-green-400">UA</span>
                   </div>
                   <div className="min-w-0">

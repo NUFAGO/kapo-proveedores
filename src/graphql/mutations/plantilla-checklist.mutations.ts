@@ -1,3 +1,43 @@
+export const GUARDAR_PLANTILLA_CHECKLIST_MUTATION = `
+  mutation GuardarPlantillaChecklist($input: GuardarPlantillaChecklistInput!) {
+    guardarPlantillaChecklist(input: $input) {
+      id
+      codigo
+      nombre
+      descripcion
+      categoriaChecklistId
+      categoria {
+        id
+        nombre
+        tipoUso
+      }
+      activo
+      fechaCreacion
+      fechaActualizacion
+      requisitos {
+        id
+        tipoRequisito
+        plantillaDocumentoId
+        formularioId
+        obligatorio
+        orden
+        activo
+        plantillaDocumento {
+          id
+          codigo
+          tipoDocumentoId
+          nombrePlantilla
+          plantillaUrl
+          formatosPermitidos
+          activo
+          fechaCreacion
+          fechaActualizacion
+        }
+      }
+    }
+  }
+`;
+
 export const CREATE_PLANTILLA_CHECKLIST_MUTATION = `
   mutation CreatePlantillaChecklist($input: PlantillaChecklistInput!) {
     crearPlantillaChecklist(input: $input) {
@@ -11,9 +51,6 @@ export const CREATE_PLANTILLA_CHECKLIST_MUTATION = `
         nombre
         tipoUso
       }
-      version
-      plantillaBaseId
-      vigente
       activo
       fechaCreacion
       fechaActualizacion
@@ -24,13 +61,17 @@ export const CREATE_PLANTILLA_CHECKLIST_MUTATION = `
         formularioId
         obligatorio
         orden
+        activo
         plantillaDocumento {
           id
-          tipoDocumento {
-            codigo
-            nombre
-            descripcion
-          }
+          codigo
+          tipoDocumentoId
+          nombrePlantilla
+          plantillaUrl
+          formatosPermitidos
+          activo
+          fechaCreacion
+          fechaActualizacion
         }
       }
     }
@@ -50,9 +91,6 @@ export const UPDATE_PLANTILLA_CHECKLIST_MUTATION = `
         nombre
         tipoUso
       }
-      version
-      plantillaBaseId
-      vigente
       activo
       fechaCreacion
       fechaActualizacion
@@ -63,13 +101,17 @@ export const UPDATE_PLANTILLA_CHECKLIST_MUTATION = `
         formularioId
         obligatorio
         orden
+        activo
         plantillaDocumento {
           id
-          tipoDocumento {
-            codigo
-            nombre
-            descripcion
-          }
+          codigo
+          tipoDocumentoId
+          nombrePlantilla
+          plantillaUrl
+          formatosPermitidos
+          activo
+          fechaCreacion
+          fechaActualizacion
         }
       }
     }
@@ -79,28 +121,5 @@ export const UPDATE_PLANTILLA_CHECKLIST_MUTATION = `
 export const DELETE_PLANTILLA_CHECKLIST_MUTATION = `
   mutation DeletePlantillaChecklist($id: ID!) {
     eliminarPlantillaChecklist(id: $id)
-  }
-`;
-
-export const CREAR_NUEVA_VERSION_MUTATION = `
-  mutation CrearNuevaVersion($checklistId: String!) {
-    crearNuevaVersion(checklistId: $checklistId) {
-      id
-      codigo
-      nombre
-      descripcion
-      categoriaChecklistId
-      categoria {
-        id
-        nombre
-        tipoUso
-      }
-      version
-      plantillaBaseId
-      vigente
-      activo
-      fechaCreacion
-      fechaActualizacion
-    }
   }
 `;

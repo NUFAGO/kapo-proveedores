@@ -270,7 +270,7 @@ export function DataTable<T = any>({
                       key={column.key}
                       className={`px-10 py-2.5 text-center ${column.className || ''}`}
                     >
-                      <div className="h-4 bg-[var(--skeleton-bg)] animate-pulse rounded"></div>
+                      <div className="h-4 bg-(--skeleton-bg) animate-pulse rounded"></div>
                     </td>
                   ))}
                 </tr>
@@ -306,7 +306,7 @@ export function DataTable<T = any>({
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button
-                className="bg-transparent border border-border-color text-text-primary p-1 flex items-center justify-center cursor-pointer transition-all duration-150 rounded-sm hover:bg-[var(--hover-bg)] hover:border-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-transparent border border-border-color text-text-primary p-1 flex items-center justify-center cursor-pointer transition-all duration-150 rounded-sm hover:bg-(--hover-bg) hover:border-accent disabled:opacity-40 disabled:cursor-not-allowed"
                 onClick={() => {
                   const newPage = currentPage - 1;
                   if (serverPagination) {
@@ -325,7 +325,7 @@ export function DataTable<T = any>({
                 {pageNumbers.map((page, index) => (
                   <button
                     key={index}
-                    className={`bg-transparent border-transparent text-text-secondary p-2 pr-3 text-xs font-medium cursor-pointer transition-all duration-150 rounded-sm min-w-9 hover:bg-[var(--hover-bg)] hover:text-text-primary ${page === currentPage ? 'bg-accent text-white border-accent' : ''}`}
+                    className={`bg-transparent border-transparent text-text-secondary p-2 pr-3 text-xs font-medium cursor-pointer transition-all duration-150 rounded-sm min-w-9 hover:bg-(--hover-bg) hover:text-text-primary ${page === currentPage ? 'bg-accent text-white border-accent' : ''}`}
                     onClick={() => {
                       const pageNum = page as number;
                       if (serverPagination) {
@@ -341,7 +341,7 @@ export function DataTable<T = any>({
               </div>
 
               <button
-                className="bg-transparent border border-border-color text-text-primary p-1 flex items-center justify-center cursor-pointer transition-all duration-150 rounded-sm hover:bg-[var(--hover-bg)] hover:border-accent disabled:opacity-40 disabled:cursor-not-allowed"
+                className="bg-transparent border border-border-color text-text-primary p-1 flex items-center justify-center cursor-pointer transition-all duration-150 rounded-sm hover:bg-(--hover-bg) hover:border-accent disabled:opacity-40 disabled:cursor-not-allowed"
                 onClick={() => {
                   const newPage = currentPage + 1;
                   if (serverPagination) {

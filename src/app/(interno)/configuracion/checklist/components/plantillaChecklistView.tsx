@@ -3,7 +3,7 @@
 import React from 'react';
 import { Button } from '@/components/ui';
 import Modal from '@/components/ui/modal';
-import { Edit, CheckCircle, XCircle, Tag, Calendar, Clock, FileText, Users, AlertCircle, Layers, FolderOpen, Star } from 'lucide-react';
+import { Edit, CheckCircle, XCircle, Tag, Calendar, Clock, FileText, Users, AlertCircle, Layers, FolderOpen, Star, Eye } from 'lucide-react';
 import type { PlantillaChecklist } from '@/hooks/usePlantillaChecklist';
 
 interface PlantillaChecklistViewProps {
@@ -29,7 +29,7 @@ export default function PlantillaChecklistView({
   };
 
   const getEstadoColor = (estado: boolean) => {
-    return estado 
+    return estado
       ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300'
       : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
   };
@@ -52,13 +52,12 @@ export default function PlantillaChecklistView({
       onClose={onClose}
       title={
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${
-            plantilla.categoria?.tipoUso === 'pago' 
-              ? 'from-blue-500 to-blue-600' 
-              : plantilla.categoria?.tipoUso === 'documentos_oc'
+          <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${plantilla.categoria?.tipoUso === 'pago'
+            ? 'from-blue-500 to-blue-600'
+            : plantilla.categoria?.tipoUso === 'documentos_oc'
               ? 'from-green-500 to-green-600'
               : 'from-purple-500 to-purple-600'
-          } flex items-center justify-center text-white`}>
+            } flex items-center justify-center text-white`}>
             {getCategoriaIcon(plantilla.categoria?.tipoUso || '')}
           </div>
           <div>
@@ -66,9 +65,6 @@ export default function PlantillaChecklistView({
               {plantilla.nombre || 'Plantilla de Checklist'}
             </span>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-muted-foreground">
-                v{plantilla.version}
-              </span>
               <span className={`text-xs px-2 py-1 rounded ${getEstadoColor(plantilla.activo)}`}>
                 {plantilla.activo ? 'Activo' : 'Inactivo'}
               </span>
@@ -76,7 +72,7 @@ export default function PlantillaChecklistView({
           </div>
         </div>
       }
-      size="xl"
+      size="lg"
       footer={
         <div className="flex justify-end gap-2">
           <Button
@@ -101,20 +97,19 @@ export default function PlantillaChecklistView({
       <div className="space-y-6">
         {/* Información Principal */}
         <div className="space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
+          <h3 className="font-bold text-xs flex items-center gap-2">
             <Tag className="w-4 h-4" />
             Información Principal
           </h3>
           <div className="p-4 rounded-lg border border-border">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${
-                  plantilla.categoria?.tipoUso === 'pago' 
-                    ? 'from-blue-500 to-blue-600' 
-                    : plantilla.categoria?.tipoUso === 'documentos_oc'
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${plantilla.categoria?.tipoUso === 'pago'
+                  ? 'from-blue-500 to-blue-600'
+                  : plantilla.categoria?.tipoUso === 'documentos_oc'
                     ? 'from-green-500 to-green-600'
                     : 'from-purple-500 to-purple-600'
-                } flex items-center justify-center text-white`}>
+                  } flex items-center justify-center text-white`}>
                   {getCategoriaIcon(plantilla.categoria?.tipoUso || '')}
                 </div>
                 <div className="min-w-0">
@@ -124,46 +119,31 @@ export default function PlantillaChecklistView({
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${
-                  plantilla.categoria?.tipoUso === 'pago' 
-                    ? 'from-blue-500 to-blue-600' 
-                    : plantilla.categoria?.tipoUso === 'documentos_oc'
+                <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${plantilla.categoria?.tipoUso === 'pago'
+                  ? 'from-blue-500 to-blue-600'
+                  : plantilla.categoria?.tipoUso === 'documentos_oc'
                     ? 'from-green-500 to-green-600'
                     : 'from-purple-500 to-purple-600'
-                } flex items-center justify-center text-white`}>
+                  } flex items-center justify-center text-white`}>
                   <FolderOpen className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <div className="text-xs font-semibold truncate">Categoría</div>
                   <div className={`text-xs text-muted-foreground truncate flex items-center gap-1`}>
-                    {getCategoriaIcon(plantilla.categoria?.tipoUso || '')}
                     <span className={getCategoriaColor(plantilla.categoria?.tipoUso || '')}>
                       {plantilla.categoria?.nombre || 'Sin categoría'}
                     </span>
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-gray-500 to-gray-600 flex items-center justify-center text-white">
-                  <Star className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs font-semibold truncate">Versión</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    v{plantilla.version}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${
-                  plantilla.activo 
-                    ? 'bg-gradient-to-r from-green-500 to-green-600' 
-                    : 'bg-gradient-to-r from-red-500 to-red-600'
-                }`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${plantilla.activo
+                  ? 'bg-gradient-to-r from-green-500 to-green-600'
+                  : 'bg-gradient-to-r from-red-500 to-red-600'
+                  }`}>
                   <CheckCircle className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
@@ -179,18 +159,9 @@ export default function PlantillaChecklistView({
 
         {/* Datos Clave */}
         <div className="space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Datos Clave
-          </h3>
           <div className="p-4 rounded-lg border border-border">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-xs font-semibold mb-1">ID</label>
-                <div className="text-xs font-medium text-primary p-2 bg-gray-100/60 dark:bg-[black]/10 rounded font-mono">
-                  {plantilla.id}
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             
               <div>
                 <label className="block text-xs font-semibold mb-1">Categoría</label>
                 <div className={`text-xs font-medium p-2 rounded capitalize ${getCategoriaColor(plantilla.categoria?.tipoUso || '')} bg-gray-100/60 dark:bg-[black]/10`}>
@@ -199,12 +170,10 @@ export default function PlantillaChecklistView({
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1">Tipo de Uso</label>
-                <div className={`text-xs font-medium p-2 rounded capitalize flex items-center gap-1 ${
-                  plantilla.categoria?.tipoUso === 'pago' 
-                    ? 'text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/20' 
-                    : 'text-green-600 dark:text-green-400 bg-green-100/60 dark:bg-green-900/20'
-                }`}>
-                  {getCategoriaIcon(plantilla.categoria?.tipoUso || '')}
+                <div className={`text-xs font-medium p-2 rounded capitalize flex items-center gap-1 ${plantilla.categoria?.tipoUso === 'pago'
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-900/20'
+                  : 'text-green-600 dark:text-green-400 bg-green-100/60 dark:bg-green-900/20'
+                  }`}>
                   {plantilla.categoria?.tipoUso === 'pago' ? 'Pago' : plantilla.categoria?.tipoUso === 'documentos_oc' ? 'Documentos OC' : 'Sin definir'}
                 </div>
               </div>
@@ -218,23 +187,66 @@ export default function PlantillaChecklistView({
           </div>
         </div>
 
-        {/* Requisitos de Documentos */}
+        {/* Estadísticas */}
         <div className="space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
+          <h3 className="font-bold text-xs flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Requisitos de Documentos
           </h3>
           <div className="p-4 rounded-lg border border-border">
-            {plantilla.requisitos && plantilla.requisitos.length > 0 ? (
-              <div className="space-y-3">
-                {plantilla.requisitos.map((requisito, index) => (
+            {(() => {
+              const requisitosActivos = plantilla.requisitos
+                ?.filter(r => r.activo)
+                .sort((a, b) => (a.orden || 0) - (b.orden || 0)) || [];
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-primary">
+                      {requisitosActivos.length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Total de Requisitos
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-red-500">
+                      {requisitosActivos.filter(r => r.obligatorio).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Requisitos Obligatorios
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-green-500">
+                      {requisitosActivos.filter(r => !r.obligatorio).length}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Requisitos Opcionales
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* Requisitos de Documentos */}
+        <div className="space-y-4">
+          <div className="p-4 rounded-lg border border-border">
+            {(() => {
+              const requisitosActivos = plantilla.requisitos
+                ?.filter(r => r.activo)
+                .sort((a, b) => (a.orden || 0) - (b.orden || 0)) || [];
+              if (requisitosActivos.length > 0) {
+                return (
+                  <div className="space-y-3">
+                    {requisitosActivos.map((requisito, index) => (
                   <div key={requisito.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex-shrink-0">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                        requisito.obligatorio 
-                          ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
-                          : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                      }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${requisito.obligatorio
+                        ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                        }`}>
                         <span className="text-xs font-bold">
                           {requisito.obligatorio ? '!' : '-'}
                         </span>
@@ -243,80 +255,58 @@ export default function PlantillaChecklistView({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-text-primary">
-                          {requisito.plantillaDocumento?.tipoDocumento?.nombre || requisito.formulario?.nombre || 'Requisito'}
+                          {requisito.plantillaDocumento?.nombrePlantilla || requisito.formulario?.nombre || 'Requisito'}
                         </span>
                         {requisito.obligatorio && (
                           <AlertCircle className="w-3 h-3 text-red-400" />
                         )}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {requisito.tipoRequisito === 'documento' ? 'Documento' : 'Formulario'} 
+                        {requisito.tipoRequisito === 'documento' ? 'Documento' : 'Formulario'}
                         {requisito.plantillaDocumento?.formatosPermitidos && ` • Formatos: ${requisito.plantillaDocumento.formatosPermitidos}`}
-                        {requisito.orden && ` • Orden: ${requisito.orden}`}
                       </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      #{index + 1}
+                    <div className="flex items-center gap-2">
+                      <div className="text-xs text-gray-500">
+                        #{index + 1}
+                      </div>
+                      {requisito.tipoRequisito === 'documento' && requisito.plantillaDocumento?.plantillaUrl && (
+                        <Button
+                          variant="subtle"
+                          color="blue"
+                          size="icon"
+                          title="Ver plantilla"
+                          onClick={() => window.open(requisito.plantillaDocumento?.plantillaUrl, '_blank')}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                  Sin requisitos asignados
-                </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-300">
-                  Esta plantilla no tiene documentos requeridos asignados.
-                </p>
-              </div>
-            )}
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="text-center py-8">
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                      Sin requisitos asignados
+                    </h4>
+                    <p className="text-xs text-gray-600 dark:text-gray-300">
+                      Esta plantilla no tiene documentos requeridos asignados.
+                    </p>
+                  </div>
+                );
+              }
+            })()}
           </div>
         </div>
 
-        {/* Estadísticas */}
-        <div className="space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Estadísticas
-          </h3>
-          <div className="p-4 rounded-lg border border-border">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">
-                  {plantilla.requisitos?.length || 0}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Total de Requisitos
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-500">
-                  {plantilla.requisitos?.filter(r => r.obligatorio).length || 0}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Requisitos Obligatorios
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">
-                  {plantilla.requisitos?.filter(r => !r.obligatorio).length || 0}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Requisitos Opcionales
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Fechas del Registro */}
+
+        {/* Fechas del Registro
         <div className="space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Registro de Fechas
-          </h3>
           <div className="p-4 rounded-lg border border-border">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
@@ -336,7 +326,7 @@ export default function PlantillaChecklistView({
                   </div>
                 </div>
               </div>
-              
+
               {plantilla.fechaActualizacion && (
                 <div className="flex items-center gap-3 p-3 border border-border rounded-lg">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white">
@@ -358,7 +348,8 @@ export default function PlantillaChecklistView({
               )}
             </div>
           </div>
-        </div>
+        </div> */}
+
       </div>
     </Modal>
   );
