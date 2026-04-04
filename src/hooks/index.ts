@@ -109,16 +109,20 @@ export {
   useExpedientesPago,
   useExpedientePago,
   useExpedientePorOcId,
+  useExpedientePorCodigo,
   useExpedientesPorProveedor,
   useCrearExpedientePago,
   useConfigurarExpediente,
   useActualizarEstadoExpediente,
   useActualizarSaldosExpediente,
   useEliminarExpedientePago,
+  useGuardarExpedienteConItems,
+  useExpedienteCompleto,
   type ExpedientePago,
   type ExpedientePagoInput,
   type ExpedientePagoFilter,
-  type ExpedientePagoPaginatedResponse
+  type ExpedientePagoPaginatedResponse,
+  type ExpedientePagoCompleto
 } from './useExpedientePago';
 
 // Hooks de tipos de pago OC

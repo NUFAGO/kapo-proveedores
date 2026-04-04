@@ -25,33 +25,33 @@ export default function ModalChecklistSelector({
   onClose, 
   type, 
   ordenCompraId, 
-  onSuccess 
+  onSuccess
 }: ModalChecklistSelectorProps) {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>('');
   const [plantillaSeleccionada, setPlantillaSeleccionada] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Configuración según el tipo de modal
+  // Configuracion segun el tipo de modal
   const modalConfig = {
     'solicitud-pago': {
-      title: 'Añadir Solicitud de Pago',
+      title: 'Agregar Solicitud de Pago',
       tipoUso: 'pago' as const,
-      placeholderCategoria: 'Buscar categoría de pago...',
+      placeholderCategoria: 'Buscar categoria de pago...',
       submitText: 'Agregar',
       icon: <Plus className="w-4 h-4" />,
       successMessage: 'Solicitud de pago agregada exitosamente',
       errorMessage: 'Error al agregar la solicitud de pago',
-      infoMessage: 'Al agregar esta solicitud, se preparará para el envío posterior con todos los requisitos que el proveedor deberá cumplir.'
+      infoMessage: 'Al agregar esta solicitud, se preparara para el envio posterior con todos los requisitos que el proveedor debera cumplir.'
     },
     'documento-oc': {
-      title: 'Añadir Documentos OC',
+      title: 'Agregar Documentos OC',
       tipoUso: 'documentos_oc' as const,
-      placeholderCategoria: 'Buscar categoría de documentos...',
+      placeholderCategoria: 'Buscar categoria de documentos...',
       submitText: 'Agregar',
       icon: <FileText className="w-4 h-4" />,
       successMessage: 'Documentos OC agregados exitosamente',
       errorMessage: 'Error al agregar documentos OC',
-      infoMessage: 'Al seleccionar esta plantilla, se prepararán los documentos OC requeridos según los requisitos definidos para su posterior envío.'
+      infoMessage: 'Al seleccionar esta plantilla, se prepararan los documentos OC requeridos segun los requisitos definidos para su posterior envio.'
     }
   };
 
@@ -231,7 +231,7 @@ export default function ModalChecklistSelector({
           <strong>OC:</strong> {ordenCompraId}
         </div>
 
-        {/* Select de Categoría Checklist usando SelectSearch */}
+        {/* Select de Categoria Checklist usando SelectSearch */}
         <div>
           <label className="block text-xs font-medium text-text-primary mb-1">
             Categoría Checklist{errors.categoria && <span className="text-red-500">*</span>}

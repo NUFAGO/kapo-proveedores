@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { DataTable, Column } from '@/components/ui/data-table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select, type SelectOption } from '@/components/ui/select'
 import { useOrdenesCompra, type OrdenCompra, type OrdenCompraFilter } from '@/hooks'
 import { 
   FileText, 
@@ -15,12 +16,15 @@ import {
   Plus,
   Filter,
   Download,
-  Search
+  Search,
+  RotateCcw,
+  Check
 } from 'lucide-react'
 
 export default function OrdenesCompraPage() {
   const router = useRouter()
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchInput, setSearchInput] = useState('')
   const [filters, setFilters] = useState<OrdenCompraFilter>({
     page: 1,
     limit: 10
@@ -28,12 +32,29 @@ export default function OrdenesCompraPage() {
 
   const { ordenesCompra, isLoading, error, refetch } = useOrdenesCompra(filters)
 
+  // Opciones para los selects
+  const estadoOptions: SelectOption[] = [
+    { value: '', label: 'Todos los estados' },
+    { value: 'pendiente', label: 'Pendiente' },
+    { value: 'aprobado', label: 'Aprobado' },
+    { value: 'en_revision', label: 'En Revisión' },
+    { value: 'completado', label: 'Completado' },
+    { value: 'cancelado', label: 'Cancelado' }
+  ]
+
+  const expedienteOptions: SelectOption[] = [
+    { value: '', label: 'Todos' },
+    { value: 'true', label: 'Con expediente' },
+    { value: 'false', label: 'Sin expediente' }
+  ]
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
     setFilters(prev => ({ ...prev, page }))
   }
 
   const handleSearch = (searchTerm: string) => {
+    setSearchInput(searchTerm)
     setFilters(prev => ({ 
       ...prev, 
       searchTerm: searchTerm || undefined,
@@ -50,6 +71,31 @@ export default function OrdenesCompraPage() {
     }))
     setCurrentPage(1)
   }
+
+  const handleExpedienteFilter = (tieneExpediente: string) => {
+    setFilters(prev => ({ 
+      ...prev, 
+      tieneExpediente: tieneExpediente === 'true' ? true : tieneExpediente === 'false' ? false : undefined,
+      page: 1 
+    }))
+    setCurrentPage(1)
+  }
+
+  const handleClear = () => {
+    setSearchInput('')
+    setFilters({
+      page: 1,
+      limit: 10
+    })
+    setCurrentPage(1)
+  }
+
+  // Verificar si hay filtros activos para mostrar el botón de limpiar
+  const hasActiveFilters = Boolean(
+    filters.searchTerm || 
+    filters.estados?.length || 
+    filters.tieneExpediente !== undefined
+  )
 
   // Configuración de estados con colores del sistema
   const statusConfig = {
@@ -144,24 +190,19 @@ export default function OrdenesCompraPage() {
       render: (value: any, row: OrdenCompra) => (
         <div className="flex items-center gap-1 justify-center">
           <Button
-                      variant="subtle"
-                      color="gray"
-                      size="icon"
-                      title="Ver detalles"
-                    
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-            </Button>
-          <Button
             size="sm"
             variant="outline"
             className="h-7 px-2 text-xs"
-            color='blue'
+            color={row.tiene_expediente ? 'green' : 'blue'}
             onClick={() => {
               router.push(`/revision-asignacion/ordenes-compra/${row.codigo_orden}`)
             }}
           >
-            <Plus className="w-3 h-3 mr-1" />
+            {row.tiene_expediente ? (
+              <Eye className="w-3 h-3 mr-1" />
+            ) : (
+              <Plus className="w-3 h-3 mr-1" />
+            )}
             Expediente
           </Button>
         </div>
@@ -192,43 +233,46 @@ export default function OrdenesCompraPage() {
             <input
               type="text"
               placeholder="Buscar órdenes..."
+              value={searchInput}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-xs h-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
 
           {/* Filtro por estado */}
-          <select
-            className="px-3 py-2 border border-gray-300 rounded-lg text-xs h-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onChange={(e) => handleEstadoFilter(e.target.value)}
-            defaultValue=""
-          >
-            <option value="">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="aprobado">Aprobado</option>
-            <option value="en_revision">En Revisión</option>
-            <option value="completado">Completado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
+          <div className="w-48">
+            <Select
+              value={filters.estados?.[0] || ''}
+              onChange={(value) => handleEstadoFilter(value || '')}
+              options={estadoOptions}
+              placeholder="Todos los estados"
+              className="h-8"
+            />
+          </div>
 
-          {/* Botones de acción */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 h-8 text-xs"
-          >
-            <Filter className="w-4 h-4" />
-            Más Filtros
-          </Button>
+          {/* Filtro por expediente */}
+          <div className="w-48">
+            <Select
+              value={filters.tieneExpediente === true ? 'true' : filters.tieneExpediente === false ? 'false' : ''}
+              onChange={(value) => handleExpedienteFilter(value || '')}
+              options={expedienteOptions}
+              placeholder="Todos (con/sin expediente)"
+              className="h-8"
+            />
+          </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 h-8 text-xs"
-          >
-            <Download className="w-4 h-4" />
-            Exportar
-          </Button>
+          {/* Botón de limpiar filtros - solo mostrar si hay filtros activos */}
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 h-8 text-xs"
+              onClick={handleClear}
+            >
+              <RotateCcw className="w-4 h-4" />
+              Limpiar
+            </Button>
+          )}
         </div>
       </div>
 

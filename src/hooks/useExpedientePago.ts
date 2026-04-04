@@ -4,7 +4,9 @@ import {
   LISTAR_EXPEDIENTES_PAGO_QUERY,
   OBTENER_EXPEDIENTE_PAGO_QUERY,
   OBTENER_EXPEDIENTE_POR_OC_ID_QUERY,
-  OBTENER_EXPEDIENTES_POR_PROVEEDOR_QUERY
+  OBTENER_EXPEDIENTE_POR_CODIGO_QUERY,
+  OBTENER_EXPEDIENTES_POR_PROVEEDOR_QUERY,
+  OBTENER_EXPEDIENTE_COMPLETO_QUERY
 } from '@/graphql'
 import {
   CREAR_EXPEDIENTE_PAGO_MUTATION,
@@ -75,6 +77,75 @@ export interface ExpedientePagoPaginatedResponse {
   totalPages: number
 }
 
+// Interfaces para Expediente Completo
+export interface TipoPagoOC {
+  id: string
+  expedienteId: string
+  categoriaChecklistId: string
+  checklistId: string
+  fechaAsignacion: string
+  modoRestriccion: string
+  orden?: number
+  requiereAnteriorPagado?: boolean
+  porcentajeMaximo?: number
+  porcentajeMinimo?: number
+  categoria?: {
+    id: string
+    nombre: string
+    descripcion: string
+    tipoUso: string
+    estado: string
+  }
+  checklist?: {
+    id: string
+    codigo: string
+    nombre: string
+    descripcion: string
+    categoriaChecklistId: string
+    activo: boolean
+    fechaActualizacion?: string
+  }
+}
+
+export interface DocumentoOC {
+  id: string
+  expedienteId: string
+  checklistId: string
+  obligatorio: boolean
+  estado: string
+  fechaCarga?: string
+  checklist?: {
+    id: string
+    codigo: string
+    nombre: string
+    descripcion: string
+    categoriaChecklistId: string
+    activo: boolean
+    fechaActualizacion?: string
+  }
+}
+
+export interface ExpedientePagoCompleto {
+  id: string
+  ocId: string
+  ocCodigo: string
+  proveedorId: string
+  proveedorNombre: string
+  montoContrato: number
+  montoDisponible: number
+  montoComprometido: number
+  montoPagado: number
+  estado: string
+  fechaInicioContrato: string
+  fechaFinContrato: string
+  descripcion: string
+  adminCreadorId: string
+  fechaCreacion: string
+  fechaConfigurado?: string
+  tiposPago: TipoPagoOC[]
+  documentos: DocumentoOC[]
+}
+
 // Hook para listar expedientes con paginación y filtros
 export function useExpedientesPago(filters?: ExpedientePagoFilter) {
   return useQuery({
@@ -101,6 +172,20 @@ export function useExpedientePorOcId(ocId: string) {
     queryFn: () => graphqlRequest(OBTENER_EXPEDIENTE_POR_OC_ID_QUERY, { ocId }),
     enabled: !!ocId,
     staleTime: 5 * 60 * 1000, // 5 minutos
+  })
+}
+
+// Hook para obtener expediente por codigo de OC
+export function useExpedientePorCodigo(codigo: string) {
+  return useQuery({
+    queryKey: ['expediente-por-codigo', codigo],
+    queryFn: () => graphqlRequest(OBTENER_EXPEDIENTE_POR_CODIGO_QUERY, { codigo }),
+    enabled: !!codigo,
+    staleTime: 5 * 60 * 1000, // 5 minutos,
+    select: (data) => {
+      // Retornar el primer expediente encontrado o null
+      return data?.listarExpedientesPago?.data?.[0] || null;
+    }
   })
 }
 
@@ -249,12 +334,24 @@ export function useGuardarExpedienteConItems() {
         plantillaChecklistId: string
       }>
     }) => graphqlRequest(GUARDAR_EXPEDIENTE_CON_ITEMS_MUTATION, { input }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['expedientes-pago'] })
+      queryClient.invalidateQueries({ queryKey: ['expediente-por-codigo', variables.ocData.codigo] })
+      queryClient.invalidateQueries({ queryKey: ['expediente-completo'] })
       queryClient.invalidateQueries({ queryKey: ['ordenes-compra'] })
     },
     onError: (error) => {
       console.error('Error guardando expediente con items:', error)
     }
+  })
+}
+
+// Hook para obtener expediente completo con relaciones
+export function useExpedienteCompleto(id: string) {
+  return useQuery({
+    queryKey: ['expediente-completo', id],
+    queryFn: () => graphqlRequest(OBTENER_EXPEDIENTE_COMPLETO_QUERY, { id }),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   })
 }

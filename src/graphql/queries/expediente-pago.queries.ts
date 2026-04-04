@@ -80,6 +80,27 @@ export const OBTENER_EXPEDIENTE_POR_OC_ID_QUERY = `
   }
 `;
 
+// Query para buscar expediente por codigo de OC
+export const OBTENER_EXPEDIENTE_POR_CODIGO_QUERY = `
+  query ObtenerExpedientePorCodigo($codigo: String!) {
+    listarExpedientesPago(filter: { 
+      ocCodigo: $codigo,
+      limit: 1
+    }) {
+      data {
+        id
+        ocId
+        ocCodigo
+        estado
+        montoContrato
+        montoDisponible
+        fechaCreacion
+      }
+      total
+    }
+  }
+`;
+
 export const OBTENER_EXPEDIENTES_POR_PROVEEDOR_QUERY = `
   query ObtenerExpedientesPorProveedor($proveedorId: String!, $filter: ExpedientePagoFilter) {
     obtenerExpedientesPorProveedor(proveedorId: $proveedorId, filter: $filter) {
@@ -99,8 +120,8 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
   query ObtenerExpedienteCompleto($id: ID!) {
     obtenerExpedienteCompleto(id: $id) {
       id
-      ordenCompraId
-      codigo
+      ocId
+      ocCodigo
       proveedorId
       proveedorNombre
       montoContrato
@@ -108,8 +129,8 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
       montoComprometido
       montoPagado
       estado
-      fechaInicio
-      fechaFin
+      fechaInicioContrato
+      fechaFinContrato
       descripcion
       adminCreadorId
       fechaCreacion
@@ -119,31 +140,26 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
         expedienteId
         categoriaChecklistId
         checklistId
+        fechaAsignacion
         modoRestriccion
         orden
         requiereAnteriorPagado
         porcentajeMaximo
         porcentajeMinimo
-        estado
-        montoMaximo
-        montoPagado
-        fechaCreacion
         categoria {
           id
           nombre
           descripcion
-          codigo
-          categoriaTipoUso
-          activo
+          tipoUso
+          estado
         }
         checklist {
           id
+          codigo
           nombre
           descripcion
-          codigo
           categoriaChecklistId
           activo
-          vigente
           fechaActualizacion
         }
       }
@@ -153,36 +169,14 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
         checklistId
         obligatorio
         estado
-        fechaCreacion
-        fechaAprobacion
-        fechaObservacion
-        observaciones
-        archivos {
-          id
-          documentoOCId
-          nombreArchivo
-          urlArchivo
-          tipoArchivo
-          tamañoArchivo
-          fechaSubida
-          subidoPor
-        }
-        categoria {
-          id
-          nombre
-          descripcion
-          codigo
-          categoriaTipoUso
-          activo
-        }
+        fechaCarga
         checklist {
           id
+          codigo
           nombre
           descripcion
-          codigo
           categoriaChecklistId
           activo
-          vigente
           fechaActualizacion
         }
       }
