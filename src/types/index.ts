@@ -8,10 +8,17 @@
  * - Activo: Interface para activos fijos
  * - Categoria: Interface para categorías
  * - Usuario: Interface para usuarios
+ * - Proveedor: Interface para proveedores
  * - [Futuro] Más tipos específicos del negocio
  */
 
-// [Futuro] Exportar tipos aquí
+// Exportar tipos de proveedores
+export * from './proveedor.types';
+
+// Exportar tipos de upload
+export * from './upload.types';
+
+// [Futuro] Exportar más tipos aquí
 // export interface Activo { ... }
 // export interface Categoria { ... }
 // export interface Usuario { ... }

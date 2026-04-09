@@ -23,9 +23,9 @@ export function MainLayout({ children, tipo }: MainLayoutProps) {
       <SidebarProvider>
         <div className="flex h-screen">
           <Sidebar tipo={tipo} />
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <UniversalHeader />
-            <main className="flex-1 overflow-auto bg-[var(--content-bg)] p-4 sm:p-6">
+            <main className="flex min-h-0 flex-1 flex-col overflow-auto bg-[var(--content-bg)] p-4 sm:p-6">
               {children}
             </main>
           </div>

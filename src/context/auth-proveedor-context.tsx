@@ -19,7 +19,8 @@ interface AuthProveedorContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (usuario: string, contrasenna: string) => Promise<void>;
-  logout: () => void;
+  /** `skipRedirect`: no navegar (p. ej. el modal de sesión usa su propia redirección con ?redirect=). */
+  logout: (options?: { skipRedirect?: boolean }) => void;
   checkAuth: () => Promise<void>;
 }
 
@@ -87,9 +88,11 @@ export function AuthProveedorProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback((options?: { skipRedirect?: boolean }) => {
     authProveedorService.logout();
     setUser(null);
+
+    if (options?.skipRedirect) return;
 
     // Redirigir al login de proveedor si estamos en una ruta de proveedor
     if (typeof window !== 'undefined' && window.location.pathname.startsWith('/proveedor/')) {

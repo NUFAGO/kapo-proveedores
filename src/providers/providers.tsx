@@ -23,6 +23,7 @@ import { AuthProveedorProvider } from '@/context/auth-proveedor-context';
 import { ThemeProvider } from '@/context/theme-context';
 // import { ConfirmProvider } from '@/context/confirm-context';
 import { SidebarProvider } from '@/context/sidebar-context';
+import { SessionExpiredProvider } from '@/providers/session-expired-provider';
 // import { PrecioSyncProvider } from '@/context/precio-sync-context';
 import { QUERY_CONFIG } from '@/lib/constants';
 
@@ -42,9 +43,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
         {/* <ConfirmProvider> */}
           <AuthProvider>
             <AuthProveedorProvider>
-              <SidebarProvider>
-                {children}
-              </SidebarProvider>
+              <SessionExpiredProvider>
+                <SidebarProvider>
+                  {children}
+                </SidebarProvider>
+              </SessionExpiredProvider>
             </AuthProveedorProvider>
           </AuthProvider>
         {/* </ConfirmProvider> */}

@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { graphqlRequest } from '@/lib/graphql-client';
+import { graphqlRequest, getGraphQLAuthHeaders } from '@/lib/graphql-client';
 import {
   SUBIR_ARCHIVO_MUTATION,
   SUBIR_MULTIPLES_ARCHIVOS_MUTATION,
@@ -118,8 +118,8 @@ export const useUpload = () => {
         method: 'POST',
         body: formData,
         headers: {
-          // No Content-Type, el navegador lo establece automáticamente para FormData
-        }
+          ...getGraphQLAuthHeaders(),
+        },
       });
 
       const result = await response.json();
@@ -184,8 +184,8 @@ export const useUpload = () => {
         method: 'POST',
         body: formData,
         headers: {
-          // No Content-Type, el navegador lo establece automáticamente para FormData
-        }
+          ...getGraphQLAuthHeaders(),
+        },
       });
 
       const result = await response.json();

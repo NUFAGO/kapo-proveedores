@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCreateUsuarioProveedor } from '@/hooks';
+import { verificarCodigoAcceso, type VerificacionCodigoResponse } from '@/hooks/useVerificarCodigoAcceso';
 import { Button, Input } from '@/components/ui';
 import Modal from '@/components/ui/modal';
 import NotificationModal from '@/components/ui/notification-modal';
@@ -21,13 +22,17 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
     dni: '',
     username: '',
     password: '',
+    codigo_acceso: '',
     proveedor_id: '',
     proveedor_nombre: '',
-    estado: 'PENDIENTE' as 'ACTIVO' | 'PENDIENTE' | 'BLOQUEADO' | 'INACTIVO'
+    estado: 'ACTIVO' as 'ACTIVO' | 'PENDIENTE' | 'BLOQUEADO' | 'INACTIVO'
   });
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [proveedorData, setProveedorData] = useState<any>(null);
+  const [codigoVerificado, setCodigoVerificado] = useState(false);
+  const [verificandoCodigo, setVerificandoCodigo] = useState(false);
 
   const createUsuarioProveedor = useCreateUsuarioProveedor();
 
@@ -44,8 +49,11 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
     }
     if (!formData.username.trim()) newErrors.username = 'El username es requerido';
     if (!formData.password.trim()) newErrors.password = 'La contraseña es requerida';
-    if (!formData.proveedor_id.trim()) newErrors.proveedor_id = 'El ID del proveedor es requerido';
-    if (!formData.proveedor_nombre.trim()) newErrors.proveedor_nombre = 'El nombre del proveedor es requerido';
+    if (!formData.codigo_acceso.trim()) {
+      newErrors.codigo_acceso = 'El código de acceso es requerido';
+    } else if (!codigoVerificado) {
+      newErrors.codigo_acceso = 'Debe verificar el código de acceso';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -65,6 +73,66 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
         [name]: ''
       }));
     }
+
+    // Si se modifica el código de acceso, resetear la verificación
+    if (name === 'codigo_acceso') {
+      setCodigoVerificado(false);
+      setProveedorData(null);
+      setFormData(prev => ({
+        ...prev,
+        proveedor_id: '',
+        proveedor_nombre: ''
+      }));
+    }
+  };
+
+  const handleVerificarCodigo = async () => {
+    if (!formData.codigo_acceso.trim()) {
+      toast.error('Ingrese un código de acceso');
+      return;
+    }
+
+    setVerificandoCodigo(true);
+    
+    try {
+      const result = await verificarCodigoAcceso(formData.codigo_acceso);
+      
+      if (result.valido && result.proveedor) {
+        const proveedor = result.proveedor;
+        setProveedorData(proveedor);
+        setFormData(prev => ({
+          ...prev,
+          proveedor_id: proveedor.id,
+          proveedor_nombre: proveedor.razon_social,
+          estado: 'ACTIVO' // Estado automático cuando se verifica el código
+        }));
+        setCodigoVerificado(true);
+        toast.success('Código verificado correctamente');
+      } else {
+        setCodigoVerificado(false);
+        setProveedorData(null);
+        setFormData(prev => ({
+          ...prev,
+          proveedor_id: '',
+          proveedor_nombre: '',
+          estado: 'ACTIVO' // Resetear a ACTIVO
+        }));
+        toast.error(result.error || 'Código inválido o expirado. Volver a comunicarse con soporte');
+      }
+    } catch (error) {
+      setCodigoVerificado(false);
+      setProveedorData(null);
+      setFormData(prev => ({
+        ...prev,
+        proveedor_id: '',
+        proveedor_nombre: '',
+        estado: 'ACTIVO' // Resetear a ACTIVO
+      }));
+      toast.error('Error al verificar el código. Volver a comunicarse con soporte');
+      console.error('Error:', error);
+    } finally {
+      setVerificandoCodigo(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -80,7 +148,10 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
 
   const handleConfirmCreate = async () => {
     try {
-      await createUsuarioProveedor.mutateAsync(formData);
+      // Eliminar codigo_acceso antes de enviar
+      const { codigo_acceso, ...dataToSend } = formData;
+      
+      await createUsuarioProveedor.mutateAsync(dataToSend);
       toast.success('Usuario proveedor creado exitosamente');
       
       // Limpiar formulario
@@ -91,17 +162,36 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
         dni: '',
         username: '',
         password: '',
+        codigo_acceso: '',
         proveedor_id: '',
         proveedor_nombre: '',
-        estado: 'PENDIENTE'
+        estado: 'ACTIVO'
       });
       
+      setProveedorData(null);
+      setCodigoVerificado(false);
       setErrors({});
       setShowConfirmModal(false);
       onClose();
-    } catch (error) {
-      toast.error('Error al crear usuario proveedor');
-      console.error('Error:', error);
+    } catch (error: any) {
+      console.error('Error al crear usuario proveedor:', error);
+      
+      // Manejar errores específicos de GraphQL
+      if (error.message && typeof error.message === 'string') {
+        if (error.message.includes('E11000 duplicate key error') && error.message.includes('username_1')) {
+          toast.error('El nombre de usuario ya está en uso. Por favor, elige otro nombre de usuario.');
+        } else if (error.message.includes('E11000 duplicate key error') && error.message.includes('dni_1')) {
+          toast.error('El DNI ya está registrado. Por favor, verifica los datos.');
+        } else if (error.message.includes('GraphQL errors:')) {
+          // Extraer mensaje específico de error de GraphQL
+          const graphqlError = error.message.replace('GraphQL errors: ', '');
+          toast.error(`Error al crear usuario: ${graphqlError}`);
+        } else {
+          toast.error('Error al crear usuario proveedor. Por favor, intenta nuevamente.');
+        }
+      } else {
+        toast.error('Error al crear usuario proveedor. Por favor, intenta nuevamente.');
+      }
     }
   };
 
@@ -272,57 +362,53 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
               )}
             </div>
 
-            <div>
+            <div className="md:col-span-2">
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                ID Proveedor*
+                Código de Acceso*
               </label>
-              <Input
-                name="proveedor_id"
-                value={formData.proveedor_id}
-                onChange={handleInputChange}
-                required
-                placeholder="Ingresa ID del proveedor"
-                className={errors.proveedor_id ? 'border-red-500' : ''}
-              />
-              {errors.proveedor_id && (
-                <p className="text-xs text-red-500 mt-1">{errors.proveedor_id}</p>
+              <div className="flex gap-2">
+                <Input
+                  name="codigo_acceso"
+                  value={formData.codigo_acceso}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Ingresa código de acceso"
+                  className={errors.codigo_acceso ? 'border-red-500' : ''}
+                />
+                <Button
+                  type="button"
+                  variant="custom"
+                  color="secondary"
+                  onClick={handleVerificarCodigo}
+                  disabled={verificandoCodigo || !formData.codigo_acceso.trim()}
+                  loading={verificandoCodigo}
+                  size="xs"
+                >
+                  Verificar
+                </Button>
+              </div>
+              {errors.codigo_acceso && (
+                <p className="text-xs text-red-500 mt-1">{errors.codigo_acceso}</p>
               )}
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Nombre Proveedor*
-              </label>
-              <Input
-                name="proveedor_nombre"
-                value={formData.proveedor_nombre}
-                onChange={handleInputChange}
-                required
-                placeholder="Ingresa nombre del proveedor"
-                className={errors.proveedor_nombre ? 'border-red-500' : ''}
-              />
-              {errors.proveedor_nombre && (
-                <p className="text-xs text-red-500 mt-1">{errors.proveedor_nombre}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Estado*
-              </label>
-              <select
-                name="estado"
-                value={formData.estado}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                required
-              >
-                <option value="PENDIENTE">Pendiente</option>
-                <option value="ACTIVO">Activo</option>
-                <option value="BLOQUEADO">Bloqueado</option>
-                <option value="INACTIVO">Inactivo</option>
-              </select>
-            </div>
+            {codigoVerificado && proveedorData && (
+              <div className="md:col-span-2">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                      Proveedor Verificado
+                    </span>
+                  </div>
+                  <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+                    <div><strong>RUC:</strong> {proveedorData.ruc}</div>
+                    <div><strong>Razón Social:</strong> {proveedorData.razon_social}</div>
+                    <div><strong>Nombre Comercial:</strong> {proveedorData.nombre_comercial}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </Modal>
@@ -332,17 +418,34 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
         isOpen={showConfirmModal}
         onClose={handleCancelCreate}
         type="info"
-        message="¿Confirmar Creación?"
+        message="Confirmar Creación"
         description={
-          <div className="space-y-2">
-            <p>Estás por crear un nuevo usuario proveedor con los siguientes datos:</p>
-            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-md text-xs space-y-1">
-              <div><strong>Nombre:</strong> {formData.nombres} {formData.apellido_paterno} {formData.apellido_materno}</div>
-              <div><strong>DNI:</strong> {formData.dni}</div>
-              <div><strong>Proveedor:</strong> {formData.proveedor_nombre}</div>
-              <div><strong>Estado:</strong> {formData.estado}</div>
+          <div className="space-y-6">
+            <p className="text-xs">Estás por crear un nuevo usuario proveedor con los siguientes datos:</p>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+              <div className="grid grid-cols-2 gap-6 text-sm">
+                <div className="flex flex-col justify-between h-full">
+                  <div className="space-y-1">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Nombre:</span>
+                    <p className="text-gray-900 dark:text-gray-100">{formData.nombres} {formData.apellido_paterno} {formData.apellido_materno}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">DNI:</span>
+                    <p className="text-gray-900 dark:text-gray-100">{formData.dni}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col justify-between h-full">
+                  <div className="space-y-1">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Usuario:</span>
+                    <p className="text-gray-900 dark:text-gray-100">{formData.username}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">Proveedor:</span>
+                    <p className="text-gray-900 dark:text-gray-100 text-xs">{formData.proveedor_nombre}</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <p>¿Deseas continuar?</p>
           </div>
         }
         confirmText="Confirmar Creación"

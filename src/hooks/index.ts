@@ -104,6 +104,24 @@ export {
   type OrdenCompraPaginatedResponse
 } from './useOrdenCompra';
 
+// Reportes de solicitud de pago (portal proveedor)
+export {
+  useReportesSolicitudPagoPorProveedor,
+  useReportesSolicitudPagoPorProveedorInfinite,
+  useReporteSolicitudPago,
+  useCrearReporteSolicitudPago,
+  type ReporteSolicitudPagoFilter,
+  type ReportesSolicitudPagoInfiniteOptions,
+  type ReporteSolicitudPagoRow,
+  type ReporteSolicitudPagoDetalle,
+  type ReporteSolicitudPagoPorProveedorConnection,
+  type CrearReporteSolicitudPagoInput,
+  type CuadrillaReporteSolicitudPagoInput,
+  type ActividadReporteSolicitudPagoInput,
+  type PersonalReporteSolicitudPagoInput,
+  type EvidenciaReporteSolicitudPagoInput,
+} from './useReporteSolicitudPago';
+
 // Hooks de expedientes de pago
 export {
   useExpedientesPago,
@@ -159,3 +177,11 @@ export {
   type DocumentoOCFilter,
   type ArchivoInput
 } from './useDocumentoOC';
+
+// Hooks de proveedores
+export {
+  useProveedores,
+  type Proveedor,
+  type ProveedorFilter,
+  type ProveedorPaginatedResponse
+} from './useProveedor';

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import { ArrowLeft, Plus, FileText, Save, Trash2, Package, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui'
@@ -30,6 +30,35 @@ interface ExpedienteItem {
   timestamp: string
 }
 
+// Componente Skeleton para cards
+const CardSkeleton = () => (
+  <div className="group">
+    <div className="bg-white dark:bg-gray-900/10 rounded-md card-shadow-hover overflow-hidden">
+      <div className='h-1 bg-gray-200 dark:bg-gray-700 animate-pulse' />
+      <div className="p-3">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 animate-pulse" />
+            <div className="flex-1">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2 w-3/4" />
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2" />
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
+            <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-20" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-16" />
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-12" />
+        </div>
+      </div>
+    </div>
+  </div>
+)
+
 export default function ExpedientePage() {
   const params = useParams()
   const codigo = params.codigo as string
@@ -53,7 +82,7 @@ export default function ExpedientePage() {
   const expedienteId = expedienteExistente?.id
 
   // Hook para obtener expediente completo con relaciones (solo en modo edicion)
-  const { data: expedienteCompletoData } = useExpedienteCompleto(
+  const { data: expedienteCompletoData, isLoading: loadingExpedienteCompleto } = useExpedienteCompleto(
     isEditMode && expedienteId ? expedienteId : ''
   )
   const expedienteCompleto = (expedienteCompletoData as any)?.obtenerExpedienteCompleto
@@ -63,7 +92,7 @@ export default function ExpedientePage() {
   const documentosExistentes = expedienteCompleto?.documentos || []
 
   // Obtener datos de la OC usando el hook de ordenes de compra
-  const { ordenesCompra } = useOrdenesCompra({ 
+  const { ordenesCompra, isLoading: loadingOrdenesCompra } = useOrdenesCompra({ 
     page: 1, 
     limit: 1,
     searchTerm: codigo 
@@ -71,6 +100,9 @@ export default function ExpedientePage() {
 
   // Encontrar la OC especifica por codigo
   const ocData = ordenesCompra?.data?.find(oc => oc.codigo_orden === codigo)
+
+  // Estado de carga combinado: skeleton mientras carga cualquier dato importante
+  const isLoading = loadingExpediente || (isEditMode && loadingExpedienteCompleto) || loadingOrdenesCompra
 
   const handleSuccess = (nuevoItem: ExpedienteItem) => {
     // Agregar item al estado local
@@ -146,6 +178,23 @@ export default function ExpedientePage() {
   const solicitudesPagoNuevas = itemsAgregados.filter(item => item.tipo === 'solicitud-pago')
   const documentosOCNuevos = itemsAgregados.filter(item => item.tipo === 'documento-oc')
 
+  /** IDs de plantilla checklist ya usados (expediente en BD + fila pendiente local). */
+  const plantillasIdsSolicitudOcupadas = useMemo(() => {
+    const desdeBd = tiposPagoExistentes
+      .map((tp: { checklistId?: string; checklist?: { id?: string } }) => tp.checklistId || tp.checklist?.id || '')
+      .filter(Boolean) as string[]
+    const desdeLocal = solicitudesPagoNuevas.map((i) => i.plantillaChecklistId).filter(Boolean)
+    return [...new Set([...desdeBd, ...desdeLocal])]
+  }, [tiposPagoExistentes, solicitudesPagoNuevas])
+
+  const plantillasIdsDocumentoOcupadas = useMemo(() => {
+    const desdeBd = documentosExistentes
+      .map((doc: { checklistId?: string; checklist?: { id?: string } }) => doc.checklistId || doc.checklist?.id || '')
+      .filter(Boolean) as string[]
+    const desdeLocal = documentosOCNuevos.map((i) => i.plantillaChecklistId).filter(Boolean)
+    return [...new Set([...desdeBd, ...desdeLocal])]
+  }, [documentosExistentes, documentosOCNuevos])
+
   // Combinar existentes + nuevos en listas unificadas
   const todasSolicitudes = [
     ...tiposPagoExistentes.map((tp: any) => ({ ...tp, _origen: 'configurado' as const })),
@@ -163,21 +212,24 @@ export default function ExpedientePage() {
     <div className="space-y-4">
       {/* Botón Volver - Movido arriba */}
       <div className="flex justify-start">
-        <Button
-          variant="outline"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Volver
-        </Button>
+
       </div>
 
       {/* Header Principal con Todo Integrado */}
-      <div className="bg-white dark:bg-gray-900/60 rounded-md p-6">
+      <div className="bg-white  dark:bg-gray-900/60 rounded-md p-6">
+      
         {/* Parte superior: Titulo y botones */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between ">
+          
           <div className="flex items-center gap-4">
+
+          <Button
+          onClick={() => window.history.back()}
+          className="flex items-center h-7 p-2"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+        </Button>
+
             <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
               <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
             </div>
@@ -272,7 +324,14 @@ export default function ExpedientePage() {
           </div>
           
           <div className="p-4">
-            {todasSolicitudes.length === 0 ? (
+            {isLoading ? (
+              // Skeleton de carga mientras carga el expediente
+              <div className="space-y-3 max-h-100 overflow-y-auto px-2 pb-2">
+                {[1, 2, 3].map((i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            ) : todasSolicitudes.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Plus className="w-6 h-5 text-gray-400" />
@@ -368,7 +427,14 @@ export default function ExpedientePage() {
           </div>
           
           <div className="p-4">
-            {todosDocumentos.length === 0 ? (
+            {isLoading ? (
+              // Skeleton de carga mientras carga el expediente
+              <div className="space-y-3 max-h-96 overflow-y-auto px-2 pb-2">
+                {[1, 2, 3].map((i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
+            ) : todosDocumentos.length === 0 ? (
               <div className="text-center py-8">
                 <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
                   <FileText className="w-5 h-5 text-gray-400" />
@@ -377,7 +443,7 @@ export default function ExpedientePage() {
                   No hay documentos
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 mb-6 text-xs">
-                  Agrega documentos OC para completar la documentacion requerida
+                  Agrega los documentos requeridos para completar la orden de compra
                 </p>
               </div>
             ) : (
@@ -458,6 +524,7 @@ export default function ExpedientePage() {
         onClose={() => setShowModalSolicitud(false)}
         type="solicitud-pago"
         ordenCompraId={codigo}
+        plantillasIdsOcupadas={plantillasIdsSolicitudOcupadas}
         onSuccess={handleSuccess}
       />
       
@@ -466,6 +533,7 @@ export default function ExpedientePage() {
         onClose={() => setShowModalDocumento(false)}
         type="documento-oc"
         ordenCompraId={codigo}
+        plantillasIdsOcupadas={plantillasIdsDocumentoOcupadas}
         onSuccess={handleSuccess}
       />
     </div>

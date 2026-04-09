@@ -19,9 +19,13 @@ import {
   MdExpandMore,
   MdExpandLess,
   MdFileUpload,
+  MdBusiness,
+  MdMiscellaneousServices,
+  MdViewKanban,
 } from 'react-icons/md';
 import { TbTemplateFilled } from "react-icons/tb";
 import { LuClipboardList } from "react-icons/lu";
+import { LuBuilding2 } from "react-icons/lu";
 import { FaFileInvoiceDollar } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
@@ -57,12 +61,13 @@ const adminNavItems: NavItem[] = [
         icon: FaFileInvoiceDollar,
       },
       {
-        name: 'Revisiones y Solicitudes',
-        href: '/revision-asignacion/revisiones-solicitudes',
-        icon: MdApproval,
+        name: 'Kanban',
+        href: '/revision-asignacion/kanban',
+        icon: MdViewKanban,
       },
     ],
   },
+
   {
     name: 'Configuracion',
     icon: MdLibraryBooks,
@@ -90,6 +95,19 @@ const adminNavItems: NavItem[] = [
 
     ],
   },
+  
+    {
+    name: 'Gestión',
+    icon: MdAssignment,
+    subItems: [
+      {
+        name: 'Proveedores',
+        href: '/gestion/proveedores',
+        icon: LuBuilding2,
+      },
+    ],
+  },
+
 ];
 
 // Navegación para proveedores (portal)
@@ -105,14 +123,9 @@ const proveedorNavItems: NavItem[] = [
     icon: MdShoppingCart,
   },
   {
-    name: 'Documentos',
-    href: '/proveedor/documentos',
+    name: 'Reportes',
+    href: '/proveedor/reportes',
     icon: MdDescription,
-  },
-  {
-    name: 'Perfil',
-    href: '/proveedor/perfil',
-    icon: MdApproval,
   },
 ];
 
@@ -131,11 +144,17 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
 
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(false);
-  // Iniciar con módulos expandidos por defecto
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(['Catálogos', 'Revisión y Asignación']));
-
-  // Determinar qué navegación mostrar según el tipo
   const navItems = tipo === 'admin' ? adminNavItems : proveedorNavItems;
+
+  const getAllItemNames = (items: NavItem[]): string[] => {
+    return items.filter(item => item.subItems && item.subItems.length > 0).map(item => item.name);
+  };
+
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => {
+    const next = new Set(getAllItemNames(navItems));
+    next.add('Aprobaciones');
+    return next;
+  });
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -207,7 +226,7 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
     <>
       <div
         className={clsx(
-          'flex h-full flex-col bg-[var(--sidebar-bg)] transition-all duration-300 card-shadow',
+          'flex h-full flex-col bg-(--sidebar-bg) transition-all duration-300 card-shadow',
           'fixed md:relative z-30',
           {
             'w-16': isCollapsed && !isMobile,
@@ -219,7 +238,7 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
         style={{ isolation: 'isolate' }}
       >
         <Link
-          className="flex h-[60px] items-center justify-center px-4 hover:opacity-90 transition-opacity duration-300"
+          className="flex h-15 items-center justify-center px-4 hover:opacity-90 transition-opacity duration-300"
           href={tipo === 'admin' ? '/dashboard' : '/proveedor/dashboard'}
         >
           <div
@@ -264,7 +283,7 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                 <span className={clsx(
                   "text-[10px] font-medium text-center leading-tight",
                   theme === 'dark'
-                    ? "text-[var(--text-secondary)]"
+                    ? "text-text-secondary"
                     : "text-gray-700"
                 )}>
                   {tipo === 'admin' ? 'Admin Portal' : 'Proveedor Portal'}
@@ -304,18 +323,18 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                             className={clsx(
                               'flex items-center justify-center px-3 py-2 rounded-md text-xs font-medium relative transition-all duration-300 ease-in-out sidebar-nav-item group',
                               {
-                                'bg-[var(--sidebar-active-bg-light)] text-[var(--sidebar-active-text-light)] sidebar-nav-item-active border-l-[3px] border-[var(--sidebar-active-bg)]': subActive,
-                                'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]': !subActive,
+                                'bg-(--sidebar-active-bg-light) text-sidebar-active-text-light sidebar-nav-item-active border-l-[3px] border-(--sidebar-active-bg)': subActive,
+                                'text-text-secondary hover:bg-(--hover-bg) hover:text-text-primary': !subActive,
                               }
                             )}
                             title={subItem.name}
                           >
                             {SubIcon && (
                               <SubIcon className={clsx(
-                                'w-5 h-5 flex-shrink-0 transition-all duration-300 ease-in-out',
+                                'w-5 h-5 shrink-0 transition-all duration-300 ease-in-out',
                                 {
-                                  'text-[var(--sidebar-active-text-light)]': subActive,
-                                  'text-[var(--text-secondary)] group-hover:scale-110 group-hover:text-[var(--text-primary)]': !subActive,
+                                  'text-sidebar-active-text-light': subActive,
+                                  'text-text-secondary group-hover:scale-110 group-hover:text-text-primary': !subActive,
                                 }
                               )} />
                             )}
@@ -338,25 +357,25 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                       className={clsx(
                         'flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium relative transition-all duration-300 ease-in-out sidebar-nav-item group w-full',
                         {
-                          'bg-[var(--sidebar-active-bg-light)] text-[var(--sidebar-active-text-light)] sidebar-nav-item-active border-l-[3px] border-[var(--sidebar-active-bg)]': hasActiveSubItem,
-                          'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]': !hasActiveSubItem,
+                          'bg-(--sidebar-active-bg-light) text-sidebar-active-text-light sidebar-nav-item-active border-l-[3px] border-(--sidebar-active-bg)': hasActiveSubItem,
+                          'text-text-secondary hover:bg-(--hover-bg) hover:text-text-primary': !hasActiveSubItem,
                         }
                       )}
                     >
                       {Icon && (!isExpanded || isCollapsed) && (
                         <Icon className={clsx(
-                          'w-5 h-5 flex-shrink-0 transition-all duration-300 ease-in-out',
+                          'w-5 h-5 shrink-0 transition-all duration-300 ease-in-out',
                           {
-                            'text-[var(--sidebar-active-text-light)]': hasActiveSubItem,
-                            'text-[var(--text-secondary)] group-hover:scale-110 group-hover:text-[var(--text-primary)]': !hasActiveSubItem,
+                            'text-sidebar-active-text-light': hasActiveSubItem,
+                            'text-text-secondary group-hover:scale-110 group-hover:text-text-primary': !hasActiveSubItem,
                           }
                         )} />
                       )}
                       <span className="truncate transition-all duration-300 ease-in-out flex-1 text-left">{item.name}</span>
                       {isExpanded ? (
-                        <MdExpandLess className="w-4 h-4 flex-shrink-0" />
+                        <MdExpandLess className="w-4 h-4 shrink-0" />
                       ) : (
-                        <MdExpandMore className="w-4 h-4 flex-shrink-0" />
+                        <MdExpandMore className="w-4 h-4 shrink-0" />
                       )}
                     </button>
 
@@ -378,17 +397,17 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                               className={clsx(
                                 'flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium relative transition-all duration-300 ease-in-out sidebar-nav-item group',
                                 {
-                                  'bg-[var(--hover-bg)] text-[var(--text-primary)]': subActive,
-                                  'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]': !subActive,
+                                  'bg-(--hover-bg) text-text-primary': subActive,
+                                  'text-text-secondary hover:bg-(--hover-bg) hover:text-text-primary': !subActive,
                                 }
                               )}
                             >
                               {SubIcon && (
                                 <SubIcon className={clsx(
-                                  'w-4 h-4 flex-shrink-0 transition-all duration-300 ease-in-out',
+                                  'w-4 h-4 shrink-0 transition-all duration-300 ease-in-out',
                                   {
-                                    'text-[var(--text-primary)]': subActive,
-                                    'text-[var(--text-secondary)] group-hover:scale-110 group-hover:text-[var(--text-primary)]': !subActive,
+                                    'text-text-primary': subActive,
+                                    'text-text-secondary group-hover:scale-110 group-hover:text-text-primary': !subActive,
                                   }
                                 )} />
                               )}
@@ -417,8 +436,8 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                   className={clsx(
                     'flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium relative transition-all duration-300 ease-in-out sidebar-nav-item group',
                     {
-                      'bg-[var(--sidebar-active-bg-light)] text-[var(--sidebar-active-text-light)] sidebar-nav-item-active border-l-[3px] border-[var(--sidebar-active-bg)]': active,
-                      'text-[var(--text-secondary)] hover:bg-[var(--hover-bg)] hover:text-[var(--text-primary)]': !active,
+                      'bg-(--sidebar-active-bg-light) text-sidebar-active-text-light sidebar-nav-item-active border-l-[3px] border-(--sidebar-active-bg)': active,
+                      'text-text-secondary hover:bg-(--hover-bg) hover:text-text-primary': !active,
                       'justify-center': isCollapsed && !isMobile,
                     }
                   )}
@@ -426,10 +445,10 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
                 >
                   {Icon && (
                     <Icon className={clsx(
-                      'w-5 h-5 flex-shrink-0 transition-all duration-300 ease-in-out',
+                      'w-5 h-5 shrink-0 transition-all duration-300 ease-in-out',
                       {
-                        'text-[var(--sidebar-active-text-light)]': active,
-                        'text-[var(--text-secondary)] group-hover:scale-110 group-hover:text-[var(--text-primary)]': !active,
+                        'text-sidebar-active-text-light': active,
+                        'text-text-secondary group-hover:scale-110 group-hover:text-text-primary': !active,
                       }
                     )} />
                   )}
@@ -446,7 +465,7 @@ export function Sidebar({ tipo = 'admin' }: SidebarProps) {
             <button
               onClick={handleLogout}
               className={clsx(
-                'flex cursor-pointer items-center justify-center gap-1 text-xs p-2 rounded-md bg-[var(--content-bg)] hover:bg-[var(--hover-bg)] w-full text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all duration-300 ease-in-out sidebar-nav-item group card-shadow',
+                'flex cursor-pointer items-center justify-center gap-1 text-xs p-2 rounded-md bg-(--content-bg) hover:bg-(--hover-bg) w-full text-text-secondary hover:text-text-primary transition-all duration-300 ease-in-out sidebar-nav-item group card-shadow',
                 isCollapsed && !isMobile && 'justify-center'
               )}
             >

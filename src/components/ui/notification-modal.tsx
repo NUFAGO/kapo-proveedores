@@ -22,6 +22,9 @@ interface NotificationModalProps {
   onConfirm?: (comment?: string, checkboxes?: CheckboxOption[]) => void;
   onCancel?: () => void;
   showCommentInput?: boolean;
+  /** Si es true (por defecto), el botón confirmar exige texto. Si es false, el comentario es opcional. */
+  commentRequired?: boolean;
+  commentLabel?: string;
   commentPlaceholder?: string;
   showCheckboxes?: boolean;
   checkboxes?: CheckboxOption[];
@@ -82,6 +85,8 @@ export default function NotificationModal({
   onConfirm,
   onCancel,
   showCommentInput = false,
+  commentRequired = true,
+  commentLabel = 'Comentario',
   commentPlaceholder = "Escribe aquí el motivo...",
   showCheckboxes = false,
   checkboxes = [],
@@ -97,6 +102,12 @@ export default function NotificationModal({
   useEffect(() => {
     setLocalCheckboxes(checkboxes);
   }, [checkboxes]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setComment('');
+    }
+  }, [isOpen]);
 
   const handleCheckboxChange = (id: string, checked: boolean) => {
     const updatedCheckboxes = localCheckboxes.map(cb =>
@@ -115,7 +126,7 @@ export default function NotificationModal({
   };
 
   const isConfirmDisabled = () => {
-    if (showCommentInput && !comment.trim()) return true;
+    if (showCommentInput && commentRequired && !comment.trim()) return true;
     if (showCheckboxes && !localCheckboxes.every(cb => cb.checked)) return true;
     return false;
   };
@@ -235,7 +246,7 @@ export default function NotificationModal({
         {showCommentInput && (
           <div>
             <label className="block text-xs font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
-              Comentario
+              {commentLabel}
             </label>
             <textarea
               value={comment}

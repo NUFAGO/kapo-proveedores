@@ -325,7 +325,7 @@ export function DataTable<T = any>({
                 {pageNumbers.map((page, index) => (
                   <button
                     key={index}
-                    className={`bg-transparent border-transparent text-text-secondary p-2 pr-3 text-xs font-medium cursor-pointer transition-all duration-150 rounded-sm min-w-9 hover:bg-(--hover-bg) hover:text-text-primary ${page === currentPage ? 'bg-accent text-white border-accent' : ''}`}
+                    className={`border-transparent text-text-secondary p-2  text-xs font-medium cursor-pointer transition-all duration-150 rounded-sm min-w-9 hover:bg-(--hover-bg) ${page === currentPage ? 'bg-accent  border-accent' : ''}`}
                     onClick={() => {
                       const pageNum = page as number;
                       if (serverPagination) {

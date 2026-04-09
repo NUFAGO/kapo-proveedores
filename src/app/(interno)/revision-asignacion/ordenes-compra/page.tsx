@@ -53,12 +53,14 @@ export default function OrdenesCompraPage() {
     setFilters(prev => ({ ...prev, page }))
   }
 
-  const handleSearch = (searchTerm: string) => {
-    setSearchInput(searchTerm)
-    setFilters(prev => ({ 
-      ...prev, 
-      searchTerm: searchTerm || undefined,
-      page: 1 
+  const handleSearch = (text: string) => {
+    setSearchInput(text)
+    const trimmed = text.trim()
+    setFilters(prev => ({
+      ...prev,
+      busquedaOrdenProveedor: trimmed || undefined,
+      searchTerm: undefined,
+      page: 1
     }))
     setCurrentPage(1)
   }
@@ -92,8 +94,8 @@ export default function OrdenesCompraPage() {
 
   // Verificar si hay filtros activos para mostrar el botón de limpiar
   const hasActiveFilters = Boolean(
-    filters.searchTerm || 
-    filters.estados?.length || 
+    filters.busquedaOrdenProveedor ||
+    filters.estados?.length ||
     filters.tieneExpediente !== undefined
   )
 
@@ -111,11 +113,11 @@ export default function OrdenesCompraPage() {
     {
       key: 'codigo_orden',
       header: 'Código',
-      className: 'text-left w-32',
+      className: 'text-left w-32 max-w-32',
       render: (value: string, row: OrdenCompra) => (
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-blue-600 shrink-0" />
-          <span className="text-xs bg-blue-100/20 dark:bg-blue-100/20 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-mono font-medium">
+          <span className="text-xs bg-blue-100/20 dark:bg-blue-100/20 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-mono font-medium truncate">
             {value}
           </span>
         </div>
@@ -124,9 +126,9 @@ export default function OrdenesCompraPage() {
     {
       key: 'descripcion',
       header: 'Descripción',
-      className: 'text-left text-xs',
+      className: 'text-left text-xs w-64 max-w-64',
       render: (value: string) => (
-        <div className="min-w-0 max-w-xs">
+        <div className="min-w-0 max-w-56">
           <div className="font-medium text-xs leading-none truncate">
             {value}
           </div>
@@ -136,7 +138,7 @@ export default function OrdenesCompraPage() {
     {
       key: 'proveedor',
       header: 'Proveedor',
-      className: 'text-left text-sm w-36',
+      className: 'text-left text-sm w-40 max-w-40',
       render: (value: any, row: OrdenCompra) => (
         <div className="min-w-0 max-w-full">
           <div className="text-xs text-gray-600 dark:text-gray-400 truncate">
@@ -148,10 +150,10 @@ export default function OrdenesCompraPage() {
     {
       key: 'total',
       header: 'Monto',
-      className: 'text-right text-xs',
+      className: 'text-right text-xs w-24 max-w-24',
       render: (value: number) => (
         <div className="flex items-center justify-end gap-1 w-20">
-          <span className="font-semibold text-xs text-green-600">
+          <span className="font-semibold text-xs text-green-600 truncate">
             S/ {value?.toFixed(2) || '0.00'}
           </span>
         </div>
@@ -160,18 +162,18 @@ export default function OrdenesCompraPage() {
     {
       key: 'fechas',
       header: 'Fechas',
-      className: 'text-center text-sm w-32',
+      className: 'text-center text-sm w-36 max-w-36',
       render: (value: any, row: OrdenCompra) => (
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-center gap-1">
             <span className="text-[10px]">Inicio:</span>
-            <span className="text-[10px]">
+            <span className="text-[10px] truncate">
               {row.fecha_ini ? new Date(row.fecha_ini).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
             </span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[10px]">Fin:</span>
-            <span className="text-[10px] ">
+            <span className="text-[10px] truncate">
               {row.fecha_fin ? new Date(row.fecha_fin).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}
             </span>
           </div>
@@ -181,12 +183,12 @@ export default function OrdenesCompraPage() {
     {
       key: 'estado',
       header: 'Estado',
-      className: 'text-center text-xs w-24'
+      className: 'text-center text-xs w-24 max-w-24'
     },
     {
       key: 'acciones',
       header: 'Acciones',
-      className: 'text-center text-sm w-32',
+      className: 'text-center text-sm w-32 max-w-32',
       render: (value: any, row: OrdenCompra) => (
         <div className="flex items-center gap-1 justify-center">
           <Button
@@ -232,7 +234,7 @@ export default function OrdenesCompraPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-secondary" />
             <input
               type="text"
-              placeholder="Buscar órdenes..."
+              placeholder="Código de orden, RUC o nombre de proveedor..."
               value={searchInput}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-xs h-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full"
               onChange={(e) => handleSearch(e.target.value)}

@@ -104,14 +104,26 @@ export const OBTENER_EXPEDIENTE_POR_CODIGO_QUERY = `
 export const OBTENER_EXPEDIENTES_POR_PROVEEDOR_QUERY = `
   query ObtenerExpedientesPorProveedor($proveedorId: String!, $filter: ExpedientePagoFilter) {
     obtenerExpedientesPorProveedor(proveedorId: $proveedorId, filter: $filter) {
-      id
-      ocId
-      ocCodigo
-      estado
-      montoContrato
-      montoDisponible
-      fechaCreacion
-      descripcion
+      data {
+        id
+        ocId
+        ocCodigo
+        estado
+        montoContrato
+        montoDisponible
+        montoComprometido
+        montoPagado
+        fechaCreacion
+        descripcion
+        proveedorId
+        proveedorNombre
+        fechaInicioContrato
+        fechaFinContrato
+      }
+      total
+      page
+      limit
+      totalPages
     }
   }
 `;
@@ -161,6 +173,33 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
           categoriaChecklistId
           activo
           fechaActualizacion
+          requisitos {
+            id
+            checklistId
+            tipoRequisito
+            plantillaDocumentoId
+            formularioId
+            obligatorio
+            orden
+            activo
+            plantillaDocumento {
+              id
+              codigo
+              tipoDocumentoId
+              nombrePlantilla
+              plantillaUrl
+              formatosPermitidos
+              activo
+              fechaCreacion
+              fechaActualizacion
+            }
+            formulario {
+              id
+              nombre
+              version
+              activo
+            }
+          }
         }
       }
       documentos {
@@ -178,6 +217,33 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
           categoriaChecklistId
           activo
           fechaActualizacion
+          requisitos {
+            id
+            checklistId
+            tipoRequisito
+            plantillaDocumentoId
+            formularioId
+            obligatorio
+            orden
+            activo
+            plantillaDocumento {
+              id
+              codigo
+              tipoDocumentoId
+              nombrePlantilla
+              plantillaUrl
+              formatosPermitidos
+              activo
+              fechaCreacion
+              fechaActualizacion
+            }
+            formulario {
+              id
+              nombre
+              version
+              activo
+            }
+          }
         }
       }
     }

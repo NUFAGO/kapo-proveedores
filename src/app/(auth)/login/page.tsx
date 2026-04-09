@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui';
 import toast from 'react-hot-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 function LoginForm() {
   const [usuario, setUsuario] = useState('');
   const [contrasenna, setContrasenna] = useState('');
+  const [mostrarContrasenna, setMostrarContrasenna] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login, logout, isAuthenticated, user } = useAuth();
   const router = useRouter();
@@ -84,10 +86,10 @@ function LoginForm() {
             <div className="flex items-center justify-center gap-6">
               <div className="text-center">
                 <h1 className="text-3xl font-bold tracking-tight uppercase bg-gradient-to-r from-[#1e40af] to-[#0f766e] bg-clip-text text-transparent">
-                  Activos Fijos
+                  KAPO
                 </h1>
                 <p className="text-xs font-bold mt-1 uppercase bg-gradient-to-r from-[#1e3a8a] to-[#0d9488] bg-clip-text text-transparent">
-                  Sistema de Gestión
+                  Proveedores
                 </p>
               </div>
             </div>
@@ -119,14 +121,30 @@ function LoginForm() {
                 >
                   Contraseña
                 </label>
-                <Input
-                  id="contrasenna"
-                  type="password"
-                  value={contrasenna}
-                  onChange={(e) => setContrasenna(e.target.value)}
-                  required
-                  placeholder="Ingresa tu contraseña"
-                />
+                <div className="relative">
+                  <Input
+                    id="contrasenna"
+                    type={mostrarContrasenna ? 'text' : 'password'}
+                    value={contrasenna}
+                    onChange={(e) => setContrasenna(e.target.value)}
+                    required
+                    placeholder="Ingresa tu contraseña"
+                    className="pr-10"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1.5 text-[var(--text-primary)]/50 hover:text-[var(--text-primary)] transition-colors"
+                    onClick={() => setMostrarContrasenna((v) => !v)}
+                    aria-label={mostrarContrasenna ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {mostrarContrasenna ? (
+                      <EyeOff className="h-4 w-4" aria-hidden />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -175,10 +193,10 @@ export default function LoginPage() {
               <div className="flex items-center justify-center gap-6">
                 <div className="text-center">
                   <h1 className="text-3xl font-bold tracking-tight uppercase bg-gradient-to-r from-[#1e40af] to-[#0f766e] bg-clip-text text-transparent">
-                    Activos Fijos
+                    KAPO
                   </h1>
                   <p className="text-xs font-bold mt-1 uppercase bg-gradient-to-r from-[#1e3a8a] to-[#0d9488] bg-clip-text text-transparent">
-                    Sistema de Gestión
+                    Proveedores
                   </p>
                 </div>
               </div>

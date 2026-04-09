@@ -67,3 +67,24 @@ export {
   ACTUALIZAR_DOCUMENTO_OC_MUTATION,
   ELIMINAR_DOCUMENTO_OC_MUTATION
 } from './documento-oc.mutations';
+
+// Requisito Documento mutations
+export {
+  CREAR_REQUISITO_DOCUMENTO_MUTATION,
+  ACTUALIZAR_REQUISITO_DOCUMENTO_MUTATION,
+  ELIMINAR_REQUISITO_DOCUMENTO_MUTATION,
+  CAMBIAR_ESTADO_REQUISITO_DOCUMENTO_MUTATION,
+  REORDENAR_REQUISITOS_MUTATION
+} from './requisito-documento.mutations';
+
+// Checklist proveedor (portal)
+export {
+  PROCESAR_CHECKLIST_PROVEEDOR_MUTATION,
+  PROCESAR_CHECKLIST_SUBSANACION_MUTATION,
+} from './checklist-proveedor.mutations';
+
+// Aprobaciones / revisión checklist (admin)
+export { FINALIZAR_REVISION_CHECKLIST_APROBACION_MUTATION } from './aprobacion-revision.mutations';
+
+// Reporte solicitud pago (portal proveedor)
+export { CREAR_REPORTE_SOLICITUD_PAGO_MUTATION } from './reporte-solicitud-pago.mutations';

@@ -17,6 +17,8 @@ interface ModalChecklistSelectorProps {
   onClose: () => void;
   type: ModalType;
   ordenCompraId: string;
+  /** Plantillas (checklist) ya asignadas al expediente en BD o en la lista local pendiente. */
+  plantillasIdsOcupadas?: string[];
   onSuccess?: (item: any) => void;
 }
 
@@ -24,7 +26,8 @@ export default function ModalChecklistSelector({
   isOpen, 
   onClose, 
   type, 
-  ordenCompraId, 
+  ordenCompraId,
+  plantillasIdsOcupadas = [],
   onSuccess
 }: ModalChecklistSelectorProps) {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState<string>('');
@@ -41,6 +44,8 @@ export default function ModalChecklistSelector({
       icon: <Plus className="w-4 h-4" />,
       successMessage: 'Solicitud de pago agregada exitosamente',
       errorMessage: 'Error al agregar la solicitud de pago',
+      duplicateMessage: 'Este checklist de solicitud de pago ya esta asignado en el expediente',
+      duplicateFieldError: 'Esta solicitud de pago ya existe (misma plantilla).',
       infoMessage: 'Al agregar esta solicitud, se preparara para el envio posterior con todos los requisitos que el proveedor debera cumplir.'
     },
     'documento-oc': {
@@ -51,6 +56,8 @@ export default function ModalChecklistSelector({
       icon: <FileText className="w-4 h-4" />,
       successMessage: 'Documentos OC agregados exitosamente',
       errorMessage: 'Error al agregar documentos OC',
+      duplicateMessage: 'Esta plantilla de documentos ya está asignada en el expediente',
+      duplicateFieldError: 'Este documento OC ya existe (misma plantilla).',
       infoMessage: 'Al seleccionar esta plantilla, se prepararan los documentos OC requeridos segun los requisitos definidos para su posterior envio.'
     }
   };
@@ -122,6 +129,12 @@ export default function ModalChecklistSelector({
       return;
     }
 
+    if (plantillasIdsOcupadas.includes(plantillaSeleccionada)) {
+      toast.error(config.duplicateMessage);
+      setErrors((prev) => ({ ...prev, plantilla: config.duplicateFieldError }));
+      return;
+    }
+
     try {
       // Preparar datos para el estado global
       const nuevoItem = {
@@ -135,12 +148,9 @@ export default function ModalChecklistSelector({
         timestamp: new Date().toISOString()
       };
 
-      // TODO: Aquí se agregaría al estado global
-      // Por ejemplo: dispatch(addItem(nuevoItem))
-      
-      console.log('📋 [PREPARADO] Item para estado global:', nuevoItem);
       
       toast.success(config.successMessage);
+      resetForm();
       onClose();
       onSuccess?.(nuevoItem);
     } catch (error) {
@@ -154,6 +164,14 @@ export default function ModalChecklistSelector({
     setPlantillaSeleccionada('');
     setErrors({});
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCategoriaSeleccionada('');
+      setPlantillaSeleccionada('');
+      setErrors({});
+    }
+  }, [isOpen]);
 
   const handleClose = () => {
     resetForm();
