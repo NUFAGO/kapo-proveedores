@@ -7,7 +7,6 @@ export const LISTAR_CATEGORIAS_CHECKLIST_QUERY = `
         descripcion
         tipoUso
         permiteMultiple
-        permiteVincularReportes
         estado
         fechaCreacion
         fechaActualizacion
@@ -25,7 +24,6 @@ export const OBTENER_CATEGORIA_CHECKLIST_QUERY = `
       descripcion
       tipoUso
       permiteMultiple
-      permiteVincularReportes
       estado
       fechaCreacion
       fechaActualizacion
@@ -41,7 +39,6 @@ export const FIND_ACTIVAS_CATEGORIA_CHECKLIST_QUERY = `
       descripcion
       tipoUso
       permiteMultiple
-      permiteVincularReportes
       estado
       fechaCreacion
       fechaActualizacion
@@ -57,7 +54,6 @@ export const FIND_INACTIVAS_CATEGORIA_CHECKLIST_QUERY = `
       descripcion
       tipoUso
       permiteMultiple
-      permiteVincularReportes
       estado
       fechaCreacion
       fechaActualizacion

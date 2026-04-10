@@ -5,6 +5,7 @@ import { graphqlRequest } from '@/lib/graphql-client';
 import {
   LISTAR_REPORTES_POR_SOLICITUD_PAGO_QUERY,
   LISTAR_REPORTES_SOLICITUD_PAGO_POR_PROVEEDOR_QUERY,
+  LISTAR_REPORTES_SOLICITUD_PAGO_ADMIN_QUERY,
   OBTENER_REPORTE_SOLICITUD_PAGO_QUERY,
   CREAR_REPORTE_SOLICITUD_PAGO_MUTATION,
 } from '@/graphql';
@@ -104,6 +105,57 @@ export function useReportesSolicitudPagoPorProveedor(
         total: 0,
         page: 1,
         limit: 10,
+        totalPages: 0,
+      },
+  });
+}
+
+export type ReporteSolicitudPagoAdminFilter = ReporteSolicitudPagoFilter & {
+  proveedorId?: string;
+};
+
+/**
+ * Admin: todos los reportes (paginado). `proveedorId` opcional para filtrar por empresa.
+ */
+export function useReportesSolicitudPagoAdmin(
+  filter: ReporteSolicitudPagoAdminFilter,
+  options: { enabled?: boolean } = {}
+) {
+  const page = filter.page ?? 1;
+  const limit = filter.limit ?? 10;
+  const enabled = options.enabled ?? true;
+
+  return useQuery({
+    queryKey: [
+      'reportes-solicitud-pago-admin',
+      page,
+      limit,
+      filter.searchTerm ?? '',
+      filter.vinculado,
+      filter.proveedorId ?? '',
+    ],
+    queryFn: () =>
+      graphqlRequest<{
+        listarReportesSolicitudPagoAdmin?: ReporteSolicitudPagoPorProveedorConnection;
+      }>(LISTAR_REPORTES_SOLICITUD_PAGO_ADMIN_QUERY, {
+        filter: {
+          page,
+          limit,
+          ...(filter.searchTerm?.trim() ? { searchTerm: filter.searchTerm.trim() } : {}),
+          ...(filter.vinculado !== undefined ? { vinculado: filter.vinculado } : {}),
+          ...(filter.proveedorId?.trim() ? { proveedorId: filter.proveedorId.trim() } : {}),
+        },
+      }),
+    enabled,
+    staleTime: 60 * 1000,
+    select: (data: {
+      listarReportesSolicitudPagoAdmin?: ReporteSolicitudPagoPorProveedorConnection;
+    }): ReporteSolicitudPagoPorProveedorConnection =>
+      data?.listarReportesSolicitudPagoAdmin ?? {
+        data: [],
+        total: 0,
+        page: 1,
+        limit,
         totalPages: 0,
       },
   });
@@ -242,6 +294,7 @@ export function useCrearReporteSolicitudPago() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reportes-solicitud-pago-por-proveedor'] });
       queryClient.invalidateQueries({ queryKey: ['reportes-solicitud-pago-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['reportes-solicitud-pago-admin'] });
     },
   });
 }

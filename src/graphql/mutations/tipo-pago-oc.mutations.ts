@@ -15,6 +15,7 @@ export const CREAR_TIPO_PAGO_OC_MUTATION = `
       requiereAnteriorPagado
       porcentajeMaximo
       porcentajeMinimo
+      permiteVincularReportes
       categoria {
         id
         nombre
@@ -42,6 +43,7 @@ export const ACTUALIZAR_TIPO_PAGO_OC_MUTATION = `
       requiereAnteriorPagado
       porcentajeMaximo
       porcentajeMinimo
+      permiteVincularReportes
       categoria {
         id
         nombre

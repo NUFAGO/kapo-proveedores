@@ -130,3 +130,25 @@ export function useProveedores(filter: ProveedorFilter = {}) {
     refetch
   }
 }
+
+/** Misma query y filtro que en gestión/proveedores (`searchTerm` en `listProveedoresPaginated`). */
+const PROVEEDOR_SELECT_BUSQUEDA_LIMIT = 50
+
+export async function buscarProveedoresParaSelect(searchTerm: string) {
+  const data = await graphqlRequest(LISTAR_PROVEEDORES_PAGINATED_QUERY, {
+    filter: {
+      page: 1,
+      limit: PROVEEDOR_SELECT_BUSQUEDA_LIMIT,
+      sortBy: 'razon_social',
+      sortOrder: 'asc',
+      filter: {
+        searchTerm: searchTerm.trim() || undefined,
+      },
+    },
+  })
+  const paginado = data.listProveedoresPaginated as ProveedorPaginatedResponse
+  return (paginado?.data ?? []).map((p) => ({
+    value: p.id,
+    label: `${p.razon_social} · ${p.ruc}`,
+  }))
+}

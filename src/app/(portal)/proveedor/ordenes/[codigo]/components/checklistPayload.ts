@@ -51,6 +51,8 @@ export interface ChecklistProveedorSubsanacionInput {
   requisitosArchivos: RequisitoArchivosChecklistInput[]
   /** Solo solicitud_pago y si cambió respecto al monto previo: el backend actualiza solicitud y aprobación. */
   montoSolicitado?: number
+  /** Solo solicitud_pago: reportes operativos aún sin vincular a vincular a esta solicitud (opcional). */
+  reporteSolicitudPagoIds?: string[]
 }
 
 export type ProveedorUserLike = {
@@ -126,17 +128,25 @@ export function validateChecklistSubmission(
     }
   }
 
+  const documentosObligatoriosSinArchivo: string[] = []
   for (const r of sorted) {
     if (r.tipoRequisito === 'documento') {
       const files = uploadedFiles.get(r.id) ?? []
       if (r.obligatorio && files.length === 0) {
-        errors.push(`Documento obligatorio sin archivos: ${etiquetaRequisito(r)}`)
+        documentosObligatoriosSinArchivo.push(etiquetaRequisito(r))
       }
     } else if (r.tipoRequisito === 'formulario' && r.obligatorio) {
       errors.push(
         `Formulario obligatorio pendiente: ${etiquetaRequisito(r)} (aún no hay captura de respuestas en el modal)`
       )
     }
+  }
+  if (documentosObligatoriosSinArchivo.length === 1) {
+    errors.push(`Documento obligatorio sin archivos: ${documentosObligatoriosSinArchivo[0]}`)
+  } else if (documentosObligatoriosSinArchivo.length > 1) {
+    errors.push(
+      `${documentosObligatoriosSinArchivo.length} documentos obligatorios sin archivos: ${documentosObligatoriosSinArchivo.join(', ')}`
+    )
   }
 
   if (errors.length > 0) return { valid: false, errors }
@@ -301,9 +311,13 @@ export interface BuildSubsanacionParams {
   aprobacionId: string
   proveedorUser: ProveedorUserLike
   montoSolicitadoOpcional?: number
+  reporteSolicitudPagoIds?: string[]
 }
 
 export function buildChecklistSubsanacion(p: BuildSubsanacionParams): ChecklistProveedorSubsanacionInput {
+  const reporteSolicitudPagoIds = p.reporteSolicitudPagoIds?.filter(
+    (id) => String(id).trim().length > 0
+  )
   return {
     context: p.context,
     expedienteId: p.expedienteId,
@@ -315,6 +329,7 @@ export function buildChecklistSubsanacion(p: BuildSubsanacionParams): ChecklistP
     ...(p.montoSolicitadoOpcional != null && Number.isFinite(p.montoSolicitadoOpcional)
       ? { montoSolicitado: p.montoSolicitadoOpcional }
       : {}),
+    ...(reporteSolicitudPagoIds?.length ? { reporteSolicitudPagoIds } : {}),
   }
 }
 

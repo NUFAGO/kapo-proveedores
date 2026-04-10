@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { graphqlRequest } from '@/lib/graphql-client'
 import {
   GET_USUARIOS_PROVEEDOR_QUERY,
+  GET_USUARIOS_PROVEEDOR_PAGINADO_QUERY,
   GET_USUARIO_PROVEEDOR_QUERY,
   GET_USUARIO_PROVEEDOR_BY_DNI_QUERY,
   GET_USUARIO_PROVEEDOR_BY_USERNAME_QUERY,
@@ -9,7 +10,8 @@ import {
   CREATE_USUARIO_PROVEEDOR_MUTATION,
   UPDATE_USUARIO_PROVEEDOR_MUTATION,
   DELETE_USUARIO_PROVEEDOR_MUTATION,
-  CAMBIAR_ESTADO_USUARIO_PROVEEDOR_MUTATION
+  CAMBIAR_ESTADO_USUARIO_PROVEEDOR_MUTATION,
+  CAMBIAR_CONTRASENA_USUARIO_PROVEEDOR_MUTATION,
 } from '@/graphql'
 
 export interface UsuarioProveedor {
@@ -89,6 +91,61 @@ export function useUsuariosProveedor(options: UseUsuarioProveedorOptions = {}): 
   }
 }
 
+export interface UsuarioProveedorPaginadoFilter {
+  page?: number
+  limit?: number
+  searchTerm?: string
+  estado?: UsuarioProveedor['estado']
+  proveedor_id?: string
+}
+
+export interface UsuarioProveedorConnection {
+  data: UsuarioProveedor[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+/**
+ * Admin: listado paginado (recomendado frente a `useUsuariosProveedor` que trae todo).
+ */
+export function useUsuariosProveedorPaginado(
+  filter: UsuarioProveedorPaginadoFilter,
+  options: UseUsuarioProveedorOptions = {}
+) {
+  const { enabled = true } = options
+  const page = filter.page ?? 1
+  const limit = filter.limit ?? 10
+
+  return useQuery({
+    queryKey: [
+      'usuariosProveedorPaginado',
+      page,
+      limit,
+      filter.searchTerm ?? '',
+      filter.estado ?? '',
+      filter.proveedor_id ?? '',
+    ],
+    queryFn: async () => {
+      const response = await graphqlRequest<{
+        usuariosProveedorPaginado: UsuarioProveedorConnection
+      }>(GET_USUARIOS_PROVEEDOR_PAGINADO_QUERY, {
+        filter: {
+          page,
+          limit,
+          ...(filter.searchTerm?.trim() ? { searchTerm: filter.searchTerm.trim() } : {}),
+          ...(filter.estado ? { estado: filter.estado } : {}),
+          ...(filter.proveedor_id?.trim() ? { proveedor_id: filter.proveedor_id.trim() } : {}),
+        },
+      })
+      return response.usuariosProveedorPaginado
+    },
+    enabled,
+    staleTime: 60 * 1000,
+  })
+}
+
 /**
  * Hook para obtener un usuario proveedor por ID
  */
@@ -165,6 +222,7 @@ export function useCreateUsuarioProveedor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedor'] })
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedorPaginado'] })
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedorByProveedorId'] })
     },
   })
@@ -186,6 +244,7 @@ export function useUpdateUsuarioProveedor() {
     },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedor'] })
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedorPaginado'] })
       queryClient.invalidateQueries({ queryKey: ['usuarioProveedor', id] })
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedorByProveedorId'] })
     },
@@ -208,6 +267,7 @@ export function useDeleteUsuarioProveedor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedor'] })
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedorPaginado'] })
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedorByProveedorId'] })
     },
   })
@@ -229,6 +289,27 @@ export function useCambiarEstadoUsuarioProveedor() {
     },
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedor'] })
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedorPaginado'] })
+      queryClient.invalidateQueries({ queryKey: ['usuarioProveedor', id] })
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedorByProveedorId'] })
+    },
+  })
+}
+
+export function useCambiarContrasenaUsuarioProveedor() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, nuevaPassword }: { id: string; nuevaPassword: string }) => {
+      const response = await graphqlRequest<{
+        cambiarContrasenaUsuarioProveedor: UsuarioProveedor
+      }>(CAMBIAR_CONTRASENA_USUARIO_PROVEEDOR_MUTATION, { id, nuevaPassword })
+
+      return response.cambiarContrasenaUsuarioProveedor
+    },
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedor'] })
+      queryClient.invalidateQueries({ queryKey: ['usuariosProveedorPaginado'] })
       queryClient.invalidateQueries({ queryKey: ['usuarioProveedor', id] })
       queryClient.invalidateQueries({ queryKey: ['usuariosProveedorByProveedorId'] })
     },

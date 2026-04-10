@@ -23,14 +23,23 @@ import {
   Link2,
   ClipboardList,
   Loader2,
+  Eye,
 } from 'lucide-react'
 import {
   Requisito,
   TipoPagoOC,
   DocumentoOC,
+  type SolicitudPagoResumen,
 } from '@/hooks/useExpedientePago'
 import {
+  aplicaValidacionPorcentajesTipoPago,
+  ESTADOS_SOLICITUD_QUE_CONSUMEN_CUPO_TIPO,
+  obtenerMetaPorcentajesTipoPago,
+  validarMontoSolicitudTipoPago,
+} from './solicitudPagoMontoTipoRules'
+import {
   useReportesSolicitudPagoPorProveedorInfinite,
+  useReportesPorSolicitudPago,
   type ReporteSolicitudPagoRow,
 } from '@/hooks/useReporteSolicitudPago'
 import { useAuthProveedor } from '@/context/auth-proveedor-context'
@@ -51,6 +60,7 @@ import {
 } from './checklistPayload'
 import { useUpload } from '@/hooks/useUpload'
 import NotificationModal from '@/components/ui/notification-modal'
+import ReporteSolicitudPagoForm from '@/app/(portal)/proveedor/reportes/components/reporteSolicitudPagoForm'
 import {
   useAprobacionYDetalleChecklistPorEntidad,
   type EntidadAprobacionRef,
@@ -69,6 +79,10 @@ interface ChecklistModalProps {
   entidadAprobacion?: EntidadAprobacionRef | null
   /** Saldo disponible del expediente; limita el monto en solicitud de pago. */
   montoDisponible?: number
+  /** Monto de contrato del expediente; para reglas % min/máx acumulado por tipo de pago. */
+  montoContrato?: number | null
+  /** Solicitudes del expediente (mismo listado que el historial); para cupo acumulado por tipo. */
+  solicitudesExpediente?: SolicitudPagoResumen[]
   tiposPago: TipoPagoOC[]
   documentos: DocumentoOC[]
   selectedTipoPagoId?: string // ID del tipo de pago seleccionado
@@ -254,27 +268,33 @@ type ProveedorChecklistModo = 'creacion' | 'lectura' | 'edicion' | 'pendiente'
 function ChecklistModalRevisionSkeleton() {
   return (
     <div
-      className="space-y-6"
+      className="bg-card space-y-4"
       aria-busy="true"
       aria-label="Cargando datos de revisión"
     >
-      <div className="rounded-lg border border-border-color/60 bg-muted/15 p-4 space-y-3">
+      {/* Misma caja que aprobación / revisión: rounded-lg border bg-muted/20 px-3 py-2 */}
+      <div className="rounded-lg border border-border-color bg-muted/20 px-3 py-2 space-y-2">
         <div className="h-4 w-2/3 rounded-md bg-muted animate-pulse" />
         <div className="h-3 w-full rounded-md bg-muted/80 animate-pulse" />
         <div className="h-3 w-5/6 rounded-md bg-muted/80 animate-pulse" />
       </div>
-      <div className="rounded-lg bg-muted/20 p-3 space-y-2">
+      {/* Mismo bloque que monto a solicitar: bg-muted/20 rounded-lg p-3 space-y-2 */}
+      <div className="bg-muted/20 rounded-lg p-3 space-y-2">
         <div className="h-3 w-36 rounded-md bg-muted animate-pulse" />
         <div className="h-9 w-full rounded-md bg-muted/70 animate-pulse" />
       </div>
+      {/* Requisitos: h4 + tarjetas como renderRequisito (border rounded-lg p-3 space-y-3) */}
       <div className="space-y-3">
-        <div className="h-3 w-28 rounded-md bg-muted animate-pulse" />
+        <div className="h-3.5 w-24 rounded-md bg-muted/90 animate-pulse" />
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-lg border border-border-color/50 p-4 space-y-3 bg-card/50"
+            className="bg-card border rounded-lg p-3 space-y-3"
           >
-            <div className="h-4 w-1/2 rounded-md bg-muted animate-pulse" />
+            <div className="flex items-center justify-between gap-2">
+              <div className="h-4 w-1/2 rounded-md bg-muted animate-pulse" />
+              <div className="h-5 w-16 rounded-full bg-muted/70 animate-pulse shrink-0" />
+            </div>
             <div className="h-14 w-full rounded-md bg-muted/50 animate-pulse" />
           </div>
         ))}
@@ -285,7 +305,7 @@ function ChecklistModalRevisionSkeleton() {
 
 function toastErroresChecklist(errors: string[]) {
   if (errors.length === 0) return
-  const duration = Math.min(14_000, 5000 + errors.length * 1200)
+  const duration = Math.min(14_000, 5000 + errors.length * 800)
   toast.error(
     (t) => (
       <div
@@ -293,15 +313,13 @@ function toastErroresChecklist(errors: string[]) {
         onClick={() => toast.dismiss(t.id)}
         role="alert"
       >
-        <span className="font-semibold">
-          {errors.length === 1 ? errors[0] : 'Corrige lo siguiente:'}
-        </span>
-        {errors.length > 1 && (
-          <ul className="mt-1 list-disc pl-4 text-sm leading-snug space-y-1 opacity-95">
-            {errors.map((err, i) => (
-              <li key={i}>{err}</li>
-            ))}
-          </ul>
+        {errors.length === 1 ? (
+          <span className="font-semibold text-sm leading-snug break-words">{errors[0]}</span>
+        ) : (
+          <span className="text-sm leading-snug break-words">
+            <span className="font-semibold">Corrige lo siguiente: </span>
+            <span className="opacity-95">{errors.join(' · ')}</span>
+          </span>
         )}
       </div>
     ),
@@ -315,6 +333,8 @@ export function ChecklistModal({
   expedienteId,
   entidadAprobacion = null,
   montoDisponible,
+  montoContrato,
+  solicitudesExpediente = [],
   tiposPago, 
   documentos,
   selectedTipoPagoId,
@@ -340,7 +360,7 @@ export function ChecklistModal({
     | { kind: 'subsanacion'; input: ChecklistProveedorSubsanacionInput }
     | null
   >(null)
-  const [reportesPickerOpen, setReportesPickerOpen] = useState(false)
+  const [reporteVistaId, setReporteVistaId] = useState<string | null>(null)
   const [selectedReporteIds, setSelectedReporteIds] = useState<Set<string>>(
     () => new Set()
   )
@@ -350,13 +370,53 @@ export function ChecklistModal({
 
   const proveedorIdReportes = proveedorUser?.proveedor_id?.trim() ?? ''
 
+  const solicitudPagoIdParaReportes = useMemo(() => {
+    if (entidadAprobacion?.entidadTipo !== 'solicitud_pago') return null
+    const id = entidadAprobacion.entidadId?.trim()
+    return id || null
+  }, [entidadAprobacion?.entidadTipo, entidadAprobacion?.entidadId])
+
+  const tipoPagoParaVincularReportes = useMemo(() => {
+    if (entidadAprobacion?.entidadTipo === 'solicitud_pago') {
+      const tid = revisionData.data?.aprobacion?.tipoPagoOCId?.trim()
+      if (tid) {
+        const hit = tiposPago.find((t) => t.id === tid)
+        if (hit) return hit
+      }
+    }
+    if (selectedTipoPagoId) {
+      return tiposPago.find((t) => t.id === selectedTipoPagoId) ?? null
+    }
+    return null
+  }, [
+    entidadAprobacion?.entidadTipo,
+    revisionData.data?.aprobacion?.tipoPagoOCId,
+    selectedTipoPagoId,
+    tiposPago,
+  ])
+
+  const permiteVincularReportesEnFlujo =
+    tipoPagoParaVincularReportes?.permiteVincularReportes === true
+
+  useEffect(() => {
+    if (!permiteVincularReportesEnFlujo) {
+      setSelectedReporteIds(new Set())
+    }
+  }, [permiteVincularReportesEnFlujo])
+
+  const { data: reportesOperativos = [] } = useReportesPorSolicitudPago(
+    solicitudPagoIdParaReportes,
+    {
+      enabled: Boolean(isOpen && solicitudPagoIdParaReportes),
+    }
+  )
+
   const reportesInfinite = useReportesSolicitudPagoPorProveedorInfinite(
     proveedorIdReportes,
     {
       enabled:
         isOpen &&
-        Boolean(selectedTipoPagoId) &&
-        reportesPickerOpen &&
+        permiteVincularReportesEnFlujo &&
         Boolean(proveedorIdReportes),
       filter: { vinculado: false },
     }
@@ -375,7 +435,7 @@ export function ChecklistModal({
   }, [reportesInfinite.data])
 
   useEffect(() => {
-    if (!reportesPickerOpen || !isOpen) return
+    if (!isOpen || !permiteVincularReportesEnFlujo) return
     const root = scrollReportesRef.current
     const target = reportesLoadMoreRef.current
     if (!root || !target) return
@@ -394,7 +454,7 @@ export function ChecklistModal({
     obs.observe(target)
     return () => obs.disconnect()
   }, [
-    reportesPickerOpen,
+    permiteVincularReportesEnFlujo,
     isOpen,
     reportesInfinite.hasNextPage,
     reportesInfinite.isFetchingNextPage,
@@ -409,14 +469,13 @@ export function ChecklistModal({
       setIsSubmitting(false)
       setConfirmEnvioOpen(false)
       setPendingEnvio(null)
-      setReportesPickerOpen(false)
+      setReporteVistaId(null)
       setSelectedReporteIds(new Set())
       montoEdicionSembradoRef.current = false
     }
   }, [isOpen])
 
   useEffect(() => {
-    setReportesPickerOpen(false)
     setSelectedReporteIds(new Set())
   }, [selectedTipoPagoId])
 
@@ -485,6 +544,238 @@ export function ChecklistModal({
     }
     return false
   }, [proveedorModoChecklist, entidadAprobacion, montoSolicitud, montoDisponible])
+
+  const creacionMontoTipoPct = useMemo(() => {
+    if (!selectedTipoPagoId) return null
+    const tipo = tiposPago.find((t) => t.id === selectedTipoPagoId)
+    if (!tipo) return null
+    const mc = montoContrato
+    if (mc == null || !Number.isFinite(mc) || mc <= 0) return null
+    if (
+      !aplicaValidacionPorcentajesTipoPago(mc, tipo.porcentajeMaximo, tipo.porcentajeMinimo)
+    ) {
+      return null
+    }
+    const raw = montoSolicitud.trim()
+    const mParsed = raw === '' ? NaN : Number(raw.replace(',', '.'))
+    const montoNuevo = Number.isFinite(mParsed) ? mParsed : 0
+    return validarMontoSolicitudTipoPago({
+      montoContrato: mc,
+      porcentajeMaximo: tipo.porcentajeMaximo,
+      porcentajeMinimo: tipo.porcentajeMinimo,
+      tipoPagoOCId: tipo.id,
+      solicitudes: solicitudesExpediente,
+      montoNuevo,
+    })
+  }, [
+    selectedTipoPagoId,
+    tiposPago,
+    montoContrato,
+    solicitudesExpediente,
+    montoSolicitud,
+  ])
+
+  const subsanacionMontoTipoPct = useMemo(() => {
+    if (proveedorModoChecklist !== 'edicion' || !entidadAprobacion) return null
+    if (entidadAprobacion.entidadTipo !== 'solicitud_pago') return null
+    const tipoId = revisionData.data?.aprobacion?.tipoPagoOCId?.trim()
+    if (!tipoId) return null
+    const tipo = tiposPago.find((t) => t.id === tipoId)
+    if (!tipo) return null
+    const mc = montoContrato
+    if (mc == null || !Number.isFinite(mc) || mc <= 0) return null
+    if (
+      !aplicaValidacionPorcentajesTipoPago(mc, tipo.porcentajeMaximo, tipo.porcentajeMinimo)
+    ) {
+      return null
+    }
+    const raw = montoSolicitud.trim()
+    const mParsed = raw === '' ? NaN : Number(raw.replace(',', '.'))
+    const montoNuevo = Number.isFinite(mParsed) ? mParsed : 0
+    return validarMontoSolicitudTipoPago({
+      montoContrato: mc,
+      porcentajeMaximo: tipo.porcentajeMaximo,
+      porcentajeMinimo: tipo.porcentajeMinimo,
+      tipoPagoOCId: tipo.id,
+      solicitudes: solicitudesExpediente,
+      montoNuevo,
+      excluirSolicitudId: entidadAprobacion.entidadId,
+    })
+  }, [
+    proveedorModoChecklist,
+    entidadAprobacion,
+    revisionData.data?.aprobacion?.tipoPagoOCId,
+    tiposPago,
+    montoContrato,
+    solicitudesExpediente,
+    montoSolicitud,
+  ])
+
+  const creacionBloqueadaPorTipoPct = useMemo(() => {
+    if (!creacionMontoTipoPct) return false
+    if (creacionMontoTipoPct.meta.choqueCupoVsMinimo) return true
+    const raw = montoSolicitud.trim()
+    if (raw === '') return false
+    const n = Number(raw.replace(',', '.'))
+    if (!Number.isFinite(n) || n < 0) return false
+    return !creacionMontoTipoPct.ok
+  }, [creacionMontoTipoPct, montoSolicitud])
+
+  const creacionMontoTipoPctMensajes = useMemo(() => {
+    if (!creacionMontoTipoPct) return [] as string[]
+    if (creacionMontoTipoPct.meta.choqueCupoVsMinimo) return creacionMontoTipoPct.errores
+    const raw = montoSolicitud.trim()
+    if (raw === '') return []
+    return creacionMontoTipoPct.ok ? [] : creacionMontoTipoPct.errores
+  }, [creacionMontoTipoPct, montoSolicitud])
+
+  const subsanacionMontoTipoPctBloquea = useMemo(() => {
+    if (!subsanacionMontoTipoPct) return false
+    if (subsanacionMontoTipoPct.meta.choqueCupoVsMinimo) return true
+    const raw = montoSolicitud.trim()
+    if (raw === '') return false
+    const n = Number(raw.replace(',', '.'))
+    if (!Number.isFinite(n) || n < 0) return false
+    return !subsanacionMontoTipoPct.ok
+  }, [subsanacionMontoTipoPct, montoSolicitud])
+
+  const montoTipoPctMensajesUi = useMemo(() => {
+    if (
+      proveedorModoChecklist === 'edicion' &&
+      entidadAprobacion?.entidadTipo === 'solicitud_pago'
+    ) {
+      if (!subsanacionMontoTipoPct) return [] as string[]
+      if (subsanacionMontoTipoPct.meta.choqueCupoVsMinimo) {
+        return subsanacionMontoTipoPct.errores
+      }
+      const raw = montoSolicitud.trim()
+      if (raw === '') return []
+      return subsanacionMontoTipoPct.ok ? [] : subsanacionMontoTipoPct.errores
+    }
+    if (proveedorModoChecklist === 'creacion' && selectedTipoPagoId) {
+      return creacionMontoTipoPctMensajes
+    }
+    return [] as string[]
+  }, [
+    proveedorModoChecklist,
+    entidadAprobacion?.entidadTipo,
+    subsanacionMontoTipoPct,
+    creacionMontoTipoPctMensajes,
+    selectedTipoPagoId,
+    montoSolicitud,
+  ])
+
+  const montoTipoPctResumenMeta = useMemo(() => {
+    const mc = montoContrato
+    if (mc == null || !Number.isFinite(mc) || mc <= 0) return null
+
+    if (
+      proveedorModoChecklist === 'edicion' &&
+      entidadAprobacion?.entidadTipo === 'solicitud_pago'
+    ) {
+      const tipoId = revisionData.data?.aprobacion?.tipoPagoOCId?.trim()
+      if (!tipoId) return null
+      const tipo = tiposPago.find((t) => t.id === tipoId)
+      if (!tipo) return null
+      if (
+        !aplicaValidacionPorcentajesTipoPago(mc, tipo.porcentajeMaximo, tipo.porcentajeMinimo)
+      ) {
+        return null
+      }
+      return obtenerMetaPorcentajesTipoPago({
+        montoContrato: mc,
+        porcentajeMaximo: tipo.porcentajeMaximo,
+        porcentajeMinimo: tipo.porcentajeMinimo,
+        tipoPagoOCId: tipo.id,
+        solicitudes: solicitudesExpediente,
+        excluirSolicitudId: entidadAprobacion.entidadId,
+      })
+    }
+
+    if (proveedorModoChecklist === 'creacion' && selectedTipoPagoId) {
+      const tipo = tiposPago.find((t) => t.id === selectedTipoPagoId)
+      if (!tipo) return null
+      if (
+        !aplicaValidacionPorcentajesTipoPago(mc, tipo.porcentajeMaximo, tipo.porcentajeMinimo)
+      ) {
+        return null
+      }
+      return obtenerMetaPorcentajesTipoPago({
+        montoContrato: mc,
+        porcentajeMaximo: tipo.porcentajeMaximo,
+        porcentajeMinimo: tipo.porcentajeMinimo,
+        tipoPagoOCId: tipo.id,
+        solicitudes: solicitudesExpediente,
+      })
+    }
+
+    return null
+  }, [
+    proveedorModoChecklist,
+    entidadAprobacion,
+    revisionData.data?.aprobacion?.tipoPagoOCId,
+    selectedTipoPagoId,
+    tiposPago,
+    montoContrato,
+    solicitudesExpediente,
+  ])
+
+  const montoTipoPctMaxEfectivoEnSolicitud = useMemo(() => {
+    if (!montoTipoPctResumenMeta) return null
+    const disp =
+      typeof montoDisponible === 'number' && Number.isFinite(montoDisponible)
+        ? montoDisponible
+        : null
+    const r = montoTipoPctResumenMeta.restante
+    if (disp != null && r != null) return Math.max(0, Math.min(disp, r))
+    if (r != null) return Math.max(0, r)
+    if (disp != null) return Math.max(0, disp)
+    return null
+  }, [montoTipoPctResumenMeta, montoDisponible])
+
+  const montoInputMaxAtributo = useMemo(() => {
+    const disp =
+      typeof montoDisponible === 'number' && Number.isFinite(montoDisponible)
+        ? montoDisponible
+        : undefined
+    const cap = montoTipoPctMaxEfectivoEnSolicitud
+    if (disp !== undefined && cap != null) return Math.min(disp, cap)
+    return cap ?? disp
+  }, [montoDisponible, montoTipoPctMaxEfectivoEnSolicitud])
+
+  /** Solicitudes del mismo tipo que entran en la suma del tope acumulado (misma regla que el cálculo). */
+  const solicitudesMismoTipoQueCuentanParaTope = useMemo(() => {
+    if (montoTipoPctResumenMeta?.topeAcumuladoSoles == null) {
+      return []
+    }
+    let tipoId: string | null = null
+    let excluir: string | undefined
+    if (
+      proveedorModoChecklist === 'edicion' &&
+      entidadAprobacion?.entidadTipo === 'solicitud_pago'
+    ) {
+      tipoId = revisionData.data?.aprobacion?.tipoPagoOCId?.trim() ?? null
+      excluir = entidadAprobacion.entidadId
+    } else if (proveedorModoChecklist === 'creacion' && selectedTipoPagoId) {
+      tipoId = selectedTipoPagoId
+    }
+    if (!tipoId) return []
+    const estadosSet = new Set(
+      ESTADOS_SOLICITUD_QUE_CONSUMEN_CUPO_TIPO.map((e) => e.toUpperCase())
+    )
+    return solicitudesExpediente.filter((s) => {
+      if (s.tipoPagoOCId !== tipoId) return false
+      if (excluir && s.id === excluir) return false
+      return estadosSet.has((s.estado || '').toUpperCase())
+    })
+  }, [
+    montoTipoPctResumenMeta?.topeAcumuladoSoles,
+    proveedorModoChecklist,
+    entidadAprobacion,
+    revisionData.data?.aprobacion?.tipoPagoOCId,
+    selectedTipoPagoId,
+    solicitudesExpediente,
+  ])
 
   const revisionActivaLecturaOEdicion =
     proveedorModoChecklist === 'lectura' || proveedorModoChecklist === 'edicion'
@@ -588,6 +879,37 @@ export function ChecklistModal({
           toast.error('El monto no puede ser mayor al disponible a pagar.')
           return
         }
+        const mcSub = montoContrato
+        const tipoIdSub = revisionData.data?.aprobacion?.tipoPagoOCId?.trim()
+        const tipoSub =
+          tipoIdSub != null && tipoIdSub !== ''
+            ? tiposPago.find((t) => t.id === tipoIdSub)
+            : undefined
+        if (
+          mcSub != null &&
+          Number.isFinite(mcSub) &&
+          mcSub > 0 &&
+          tipoSub &&
+          aplicaValidacionPorcentajesTipoPago(
+            mcSub,
+            tipoSub.porcentajeMaximo,
+            tipoSub.porcentajeMinimo
+          )
+        ) {
+          const pctSub = validarMontoSolicitudTipoPago({
+            montoContrato: mcSub,
+            porcentajeMaximo: tipoSub.porcentajeMaximo,
+            porcentajeMinimo: tipoSub.porcentajeMinimo,
+            tipoPagoOCId: tipoSub.id,
+            solicitudes: solicitudesExpediente,
+            montoNuevo: mActual,
+            excluirSolicitudId: entidadAprobacion.entidadId,
+          })
+          if (!pctSub.ok) {
+            toastErroresChecklist(pctSub.errores)
+            return
+          }
+        }
         const prevRaw = aprob.montoSolicitado
         const mPrev =
           prevRaw != null && Number.isFinite(Number(prevRaw)) ? Number(prevRaw) : NaN
@@ -607,6 +929,11 @@ export function ChecklistModal({
         aprobacionId: aprob.id,
         proveedorUser,
         montoSolicitadoOpcional: montoSubsanacionOpcional,
+        ...(entidadAprobacion.entidadTipo === 'solicitud_pago' &&
+          permiteVincularReportesEnFlujo &&
+          selectedReporteIds.size > 0
+          ? { reporteSolicitudPagoIds: [...selectedReporteIds] }
+          : {}),
       })
       if (collectChecklistFilesUploadQueue(requisitos, uploadedFiles).length === 0) {
         toast.error('Incluye al menos un requisito con archivos para subsanar.')
@@ -652,14 +979,49 @@ export function ChecklistModal({
         toast.error('Debes iniciar sesión como proveedor para enviar el checklist.')
         return
       }
+      if (
+        tipo.permiteVincularReportes === true &&
+        selectedReporteIds.size === 0
+      ) {
+        toast.error(
+          'Para poder hacer esta solicitud de pago, debes vincular al menos un reporte operativo.'
+        )
+        return
+      }
       const monto = Number(montoSolicitud.trim().replace(',', '.'))
+      const mcCre = montoContrato
+      if (
+        mcCre != null &&
+        Number.isFinite(mcCre) &&
+        mcCre > 0 &&
+        aplicaValidacionPorcentajesTipoPago(
+          mcCre,
+          tipo.porcentajeMaximo,
+          tipo.porcentajeMinimo
+        )
+      ) {
+        const pctCre = validarMontoSolicitudTipoPago({
+          montoContrato: mcCre,
+          porcentajeMaximo: tipo.porcentajeMaximo,
+          porcentajeMinimo: tipo.porcentajeMinimo,
+          tipoPagoOCId: tipo.id,
+          solicitudes: solicitudesExpediente,
+          montoNuevo: monto,
+        })
+        if (!pctCre.ok) {
+          toastErroresChecklist(pctCre.errores)
+          return
+        }
+      }
       const batchInput = buildChecklistBatchSolicitud({
         expedienteId,
         tipoPagoOCId: tipo.id,
         montoSolicitado: monto,
         proveedorUser: proveedorUser,
         reporteSolicitudPagoIds:
-          selectedReporteIds.size > 0 ? [...selectedReporteIds] : undefined,
+          permiteVincularReportesEnFlujo && selectedReporteIds.size > 0
+            ? [...selectedReporteIds]
+            : undefined,
       })
       setPendingEnvio({ kind: 'creacion', input: batchInput })
       setConfirmEnvioOpen(true)
@@ -826,16 +1188,22 @@ export function ChecklistModal({
     return { conDetalle, soloId }
   }, [reportesListaPlana, selectedReporteIds])
 
-  const renderBloqueReportesVinculacionSolicitud = () => {
+  const renderBloqueReportesVinculacionSolicitud = (
+    modo: 'envio_inicial' | 'subsanacion' = 'envio_inicial'
+  ) => {
     const { conDetalle, soloId } = reportesMarcadosParaConfirmacion
     const hayAlguno = conDetalle.length > 0 || soloId.length > 0
+    const textoConfirmar =
+      modo === 'subsanacion'
+        ? 'al confirmar la subsanación'
+        : 'al confirmar el envío'
     return (
       <div className="rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)] p-3 space-y-2">
         <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">
-          Reportes a vincular
+          {modo === 'subsanacion' ? 'Reportes a vincular ' : 'Reportes a vincular'}
         </p>
         <p className="text-[11px] text-[var(--text-secondary)] leading-snug">
-          Los siguientes reportes se vincularán a esta solicitud de pago al confirmar el envío
+          Los siguientes reportes se vincularán a esta solicitud de pago {textoConfirmar}
         </p>
         {!hayAlguno ? (
           <p className="text-xs text-[var(--text-secondary)] italic py-1">
@@ -937,8 +1305,8 @@ export function ChecklistModal({
                   </div>
                 )
               })()}
-            {pendingEnvio.input.context === 'solicitud_pago'
-              ? renderBloqueReportesVinculacionSolicitud()
+            {pendingEnvio.input.context === 'solicitud_pago' && permiteVincularReportesEnFlujo
+              ? renderBloqueReportesVinculacionSolicitud('subsanacion')
               : null}
             <div>
               <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">
@@ -994,9 +1362,11 @@ export function ChecklistModal({
               </p>
             </div>
           )}
-          {esSolicitud ? renderBloqueReportesVinculacionSolicitud() : null}
-          <div>
-            <p className="text-xs font-medium text-[var(--text-secondary)] mb-2">Requisitos y archivos</p>
+          {esSolicitud && permiteVincularReportesEnFlujo
+            ? renderBloqueReportesVinculacionSolicitud()
+            : null}
+          <div className="rounded-lg bg-[var(--card-bg)] border border-[var(--border-color)] p-3">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-[var(--text-secondary)] mb-1">Requisitos y archivos</p>
             <ul className="space-y-2 max-h-[min(40vh,16rem)] overflow-y-auto pr-1">
               {filas.map((row) => (
                 <li
@@ -1353,7 +1723,7 @@ export function ChecklistModal({
     const requisitos = tipoPago.checklist?.requisitos || []
 
     return (
-      <div key={tipoPago.id} className="bg-card border rounded-lg p-4 space-y-4">
+      <div key={tipoPago.id} className="bg-card border rounded-lg space-y-4">
         {/* Header del tipo de pago */}
         <div className="flex items-start gap-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
@@ -1394,7 +1764,7 @@ export function ChecklistModal({
     const requisitos = documento.checklist?.requisitos || []
 
     return (
-      <div key={documento.id} className="bg-card border border-green-200 rounded-lg p-4 space-y-4">
+      <div key={documento.id} className="bg-card border border-green-200 rounded-lg space-y-4">
         {/* Header del documento */}
         <div className="flex items-start gap-3">
           <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
@@ -1474,6 +1844,7 @@ export function ChecklistModal({
     confirmEnvioOpen ||
     Boolean(selectedTipoPagoId && !montoSolicitud.trim()) ||
     montoSuperaDisponible ||
+    creacionBloqueadaPorTipoPct ||
     (!selectedTipoPagoId && !selectedDocumentoId)
 
   const subsanacionPreValidacionOk = useMemo(() => {
@@ -1510,15 +1881,13 @@ export function ChecklistModal({
     String(revisionData.data.aprobacion.estado).toUpperCase() !== 'OBSERVADO' ||
     !subsanacionPreValidacionOk ||
     subsanarMontoBloquea ||
+    subsanacionMontoTipoPctBloquea ||
     !onSubsanacionReady
 
   const modalFooterCreacion = (
     <div className="flex flex-col gap-2 w-full">
       <div className="flex items-center justify-between w-full gap-2">
         <div className="text-xs text-muted-foreground min-w-0">
-          {selectedDocumentoId && (
-            <span>Documento OC: sin monto; archivos según requisitos obligatorios.</span>
-          )}
           {!selectedTipoPagoId && !selectedDocumentoId && (
             <span>Abre el checklist desde un tipo de pago o un documento OC.</span>
           )}
@@ -1646,7 +2015,7 @@ export function ChecklistModal({
                 const requisitos = tipoPago.checklist?.requisitos || []
                 
                 return (
-                  <div key={tipoPago.id} className="bg-card rounded-lg space-y-4">
+                  <div key={tipoPago.id} className="bg-card space-y-4">
                     {/* Header del tipo de pago */}
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
@@ -1740,23 +2109,90 @@ export function ChecklistModal({
 
                     {/* Campo de monto a solicitar */}
                     <div className="bg-muted/20 rounded-lg p-3 space-y-2">
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <label className="block text-xs font-semibold text-muted-foreground">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                        <label className="block text-xs font-semibold text-muted-foreground shrink-0">
                           {montoSoloLectura ? 'Monto solicitado' : 'Monto a Solicitar *'}
                         </label>
-                        {montoDisponibleOk !== undefined && !montoSoloLectura && (
-                          <span className="text-xs text-muted-foreground">
-                            Disponible a pagar:{' '}
-                            <span className="font-semibold text-foreground tabular-nums">
-                              S/{' '}
-                              {montoDisponibleOk.toLocaleString('es-PE', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
-                            </span>
-                          </span>
+                        {!montoSoloLectura && (
+                          <div className="flex flex-wrap items-baseline justify-end gap-x-3 gap-y-1 text-xs text-muted-foreground text-right min-w-0">
+                            {montoDisponibleOk !== undefined && (
+                              <span className="whitespace-nowrap">
+                                Disponible a pagar:{' '}
+                                <span className="font-semibold text-foreground tabular-nums">
+                                  S/{' '}
+                                  {montoDisponibleOk.toLocaleString('es-PE', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </span>
+                              </span>
+                            )}
+                            {montoTipoPctResumenMeta?.topeAcumuladoSoles != null &&
+                              montoTipoPctResumenMeta.restante != null && (
+                                <span
+                                  className="whitespace-nowrap"
+                                  title="Monto que aún puedes pedir de este tipo de pago, respecto al máximo acumulado permitido"
+                                >
+                                  Restante:{' '}
+                                  <span className="font-semibold text-foreground tabular-nums">
+                                    S/{' '}
+                                    {Math.max(0, montoTipoPctResumenMeta.restante).toLocaleString('es-PE', {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}{' '}
+                                    / S/ {' '}
+                                    {montoTipoPctResumenMeta.topeAcumuladoSoles.toLocaleString('es-PE', {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                  </span>
+                                </span>
+                              )}
+                            {montoTipoPctResumenMeta?.minPorSolicitudSoles != null && (
+                              <span className="whitespace-nowrap">
+                                Mínimo:{' '}
+                                <span className="font-semibold text-foreground tabular-nums">
+                                  S/{' '}
+                                  {montoTipoPctResumenMeta.minPorSolicitudSoles.toLocaleString('es-PE', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </span>
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
+                      {!montoSoloLectura &&
+                      montoTipoPctResumenMeta?.topeAcumuladoSoles != null ? (
+                        <p className="text-[11px] text-muted-foreground leading-snug">
+                          {solicitudesMismoTipoQueCuentanParaTope.length > 0 ? (
+                            <span>
+                              Existen{' '}
+                              <span className="font-medium text-foreground">
+                                {solicitudesMismoTipoQueCuentanParaTope.length} solicitud
+                                {solicitudesMismoTipoQueCuentanParaTope.length !== 1 ? 'es' : ''} de pago
+                              </span>{' '}
+                              de este tipo (las rechazadas no se contabilizan). Total:{' '}
+                              <span className="font-medium text-foreground tabular-nums">
+                                S/{' '}
+                                {montoTipoPctResumenMeta.yaComprometido.toLocaleString('es-PE', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </span>
+                              .
+                              {proveedorModoChecklist === 'edicion' &&
+                                entidadAprobacion?.entidadTipo === 'solicitud_pago' &&
+                                ' La que subsanas no entra en ese total.'}
+                            </span>
+                          ) : (
+                            <span>
+                              No hay solicitudes de este tipo contabilizadas para el máx. acumulado (rechazadas no cuentan).
+                            </span>
+                          )}
+                        </p>
+                      ) : null}
                       {montoSoloLectura ? (
                         <p className="text-sm font-semibold tabular-nums text-foreground">
                           {montoSolicitudRevision != null && Number.isFinite(montoSolicitudRevision)
@@ -1775,7 +2211,7 @@ export function ChecklistModal({
                             onChange={(e) => setMontoSolicitud(e.target.value)}
                             className="text-xs"
                             min="0"
-                            max={montoDisponibleOk}
+                            max={montoInputMaxAtributo}
                             step="0.01"
                             aria-invalid={montoSuperaDisponible}
                           />
@@ -1784,6 +2220,11 @@ export function ChecklistModal({
                               El monto debe ser menor o igual al disponible a pagar.
                             </p>
                           )}
+                          {montoTipoPctMensajesUi.map((msg, i) => (
+                            <p key={i} className="text-xs text-destructive leading-snug">
+                              {msg}
+                            </p>
+                          ))}
                         </>
                       )}
                     </div>
@@ -1815,26 +2256,91 @@ export function ChecklistModal({
                       </div>
                     )}
 
-                    <div className="rounded-lg border border-dashed border-border-color/80 bg-muted/15 p-3 space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                    {solicitudPagoIdParaReportes && reportesOperativos.length > 0 ? (
+                      <section
+                        className="space-y-3"
+                        aria-labelledby="proveedor-checklist-reportes-sp-heading"
+                      >
+                        <header className="flex items-center gap-2">
+                          <ClipboardList
+                            className="h-4 w-4 shrink-0 text-primary"
+                            aria-hidden
+                          />
+                          <h3
+                            id="proveedor-checklist-reportes-sp-heading"
+                            className="font-bold text-xs text-foreground"
+                          >
+                            Reportes operativos
+                          </h3>
+                        </header>
+                        <p className="text-[11px] text-muted-foreground">
+                          Reportes de trabajo vinculados a esta solicitud de pago.
+                        </p>
+
+                        <ul className="space-y-2">
+                          {reportesOperativos.map((rep) => {
+                            const fechaRep = rep.fecha ? new Date(rep.fecha) : null
+                            const fechaLabel =
+                              fechaRep && !Number.isNaN(fechaRep.getTime())
+                                ? fechaRep.toLocaleDateString('es-PE', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                  })
+                                : '—'
+                            return (
+                              <li
+                                key={rep.id}
+                                className="rounded-lg border border-border bg-muted/10 p-3 dark:bg-muted/5"
+                              >
+                                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                                  <div className="min-w-0 flex-1 space-y-0.5">
+                                    <p className="text-xs font-semibold leading-tight text-foreground">
+                                      {rep.codigo?.trim()
+                                        ? rep.codigo
+                                        : `Reporte ${rep.id.slice(-6)}`}
+                                    </p>
+                                    <p className="text-[10px] text-muted-foreground">
+                                      {fechaLabel}
+                                    </p>
+                                  </div>
+                                  <Button
+                                    variant="subtle"
+                                    color="blue"
+                                    size="icon"
+                                    title="Ver detalles"
+                                    onClick={() => setReporteVistaId(rep.id)}
+                                    aria-label={`Ver reporte operativo ${
+                                      rep.codigo?.trim() ? rep.codigo : rep.id.slice(-6)
+                                    }`}
+                                  >
+                                    <Eye className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                                  </Button>
+                                </div>
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                  <span className="font-medium text-foreground">
+                                    Responsable:{' '}
+                                  </span>
+                                  {rep.maestroResponsable}
+                                </p>
+                                {rep.observacionesGenerales?.trim() ? (
+                                  <p className="mt-2 line-clamp-3 border-t border-border pt-2 text-[11px] leading-relaxed text-muted-foreground">
+                                    {rep.observacionesGenerales.trim()}
+                                  </p>
+                                ) : null}
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </section>
+                    ) : null}
+
+                    {proveedorModoChecklist !== 'lectura' && permiteVincularReportesEnFlujo ? (
+                      <div className="rounded-lg border border-dashed border-border-color/80 bg-muted/15 p-3 space-y-3">
                         <p className="text-xs font-semibold text-foreground flex items-center gap-2 min-w-0">
                           <ClipboardList className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span className="truncate">Reportes de solicitud de pago</span>
                         </p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs shrink-0"
-                          onClick={() => setReportesPickerOpen((v) => !v)}
-                        >
-                          <Link2 className="h-3 w-3 mr-1.5" />
-                          {reportesPickerOpen
-                            ? 'Ocultar reportes'
-                            : 'Seleccionar reportes'}
-                        </Button>
-                      </div>
-                      {reportesPickerOpen ? (
                         <div className="space-y-2">
                           <p className="text-[11px] text-muted-foreground leading-snug">
                             Solo se muestran reportes aún no vinculados a una solicitud en el sistema.
@@ -1936,8 +2442,8 @@ export function ChecklistModal({
                             </div>
                           )}
                         </div>
-                      ) : null}
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
                 )
               })}
@@ -1953,7 +2459,7 @@ export function ChecklistModal({
                 const requisitos = documento.checklist?.requisitos || []
                 
                 return (
-                  <div key={documento.id} className="bg-card rounded-lg p-4 space-y-4">
+                  <div key={documento.id} className="bg-card  rounded-lg space-y-4">
                     {/* Header del documento */}
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
@@ -1963,7 +2469,7 @@ export function ChecklistModal({
                         <h3 className="font-semibold text-base max-sm:text-sm">{documento.checklist?.nombre}</h3>
                         <p className="text-xs text-muted-foreground max-sm:text-xs">{documento.checklist?.descripcion}</p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <Badge variant="secondary" className="text-xs">{documento.checklist?.categoria?.nombre}</Badge>
+                          
                           {documento.obligatorio && (
                             <Badge variant="destructive" className="text-xs">Obligatorio</Badge>
                           )}
@@ -2035,6 +2541,13 @@ export function ChecklistModal({
         )}
       </div>
     </Modal>
+
+    <ReporteSolicitudPagoForm
+      isOpen={Boolean(reporteVistaId)}
+      onClose={() => setReporteVistaId(null)}
+      mode="view"
+      reporteId={reporteVistaId}
+    />
 
     <NotificationModal
       isOpen={confirmEnvioOpen && Boolean(pendingEnvio)}

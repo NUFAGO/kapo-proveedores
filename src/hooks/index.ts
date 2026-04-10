@@ -17,6 +17,7 @@ export { useAuthProveedor } from '@/context/auth-proveedor-context';
 // Hooks de usuarios proveedor
 export {
   useUsuariosProveedor,
+  useUsuariosProveedorPaginado,
   useUsuarioProveedor,
   useUsuarioProveedorByDni,
   useUsuariosProveedorByProveedorId,
@@ -24,9 +25,12 @@ export {
   useUpdateUsuarioProveedor,
   useDeleteUsuarioProveedor,
   useCambiarEstadoUsuarioProveedor,
+  useCambiarContrasenaUsuarioProveedor,
   type UsuarioProveedor,
   type UsuarioProveedorInput,
-  type UsuarioProveedorUpdateInput
+  type UsuarioProveedorUpdateInput,
+  type UsuarioProveedorPaginadoFilter,
+  type UsuarioProveedorConnection,
 } from './useUsuarioProveedor';
 
 // Hooks de tipos de documento
@@ -104,13 +108,15 @@ export {
   type OrdenCompraPaginatedResponse
 } from './useOrdenCompra';
 
-// Reportes de solicitud de pago (portal proveedor)
+// Reportes de solicitud de pago (portal proveedor + admin)
 export {
   useReportesSolicitudPagoPorProveedor,
+  useReportesSolicitudPagoAdmin,
   useReportesSolicitudPagoPorProveedorInfinite,
   useReporteSolicitudPago,
   useCrearReporteSolicitudPago,
   type ReporteSolicitudPagoFilter,
+  type ReporteSolicitudPagoAdminFilter,
   type ReportesSolicitudPagoInfiniteOptions,
   type ReporteSolicitudPagoRow,
   type ReporteSolicitudPagoDetalle,
@@ -181,6 +187,7 @@ export {
 // Hooks de proveedores
 export {
   useProveedores,
+  buscarProveedoresParaSelect,
   type Proveedor,
   type ProveedorFilter,
   type ProveedorPaginatedResponse

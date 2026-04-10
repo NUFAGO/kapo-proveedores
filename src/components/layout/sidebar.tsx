@@ -22,7 +22,10 @@ import {
   MdBusiness,
   MdMiscellaneousServices,
   MdViewKanban,
+  MdPeople,
+  MdAssessment,
 } from 'react-icons/md';
+import { FaRegFolderOpen } from "react-icons/fa6";
 import { TbTemplateFilled } from "react-icons/tb";
 import { LuClipboardList } from "react-icons/lu";
 import { LuBuilding2 } from "react-icons/lu";
@@ -105,6 +108,16 @@ const adminNavItems: NavItem[] = [
         href: '/gestion/proveedores',
         icon: LuBuilding2,
       },
+      {
+        name: 'Usuarios',
+        href: '/gestion/usuarios',
+        icon: MdPeople,
+      },
+      {
+        name: 'Reportes',
+        href: '/gestion/reportes',
+        icon: MdAssessment,
+      },
     ],
   },
 
@@ -120,7 +133,7 @@ const proveedorNavItems: NavItem[] = [
   {
     name: 'Mis Órdenes',
     href: '/proveedor/ordenes',
-    icon: MdShoppingCart,
+    icon: FaRegFolderOpen,
   },
   {
     name: 'Reportes',

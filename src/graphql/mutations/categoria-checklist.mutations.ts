@@ -6,7 +6,6 @@ export const CREATE_CATEGORIA_CHECKLIST_MUTATION = `
       descripcion
       tipoUso
       permiteMultiple
-      permiteVincularReportes
       estado
       fechaCreacion
       fechaActualizacion
@@ -22,7 +21,6 @@ export const UPDATE_CATEGORIA_CHECKLIST_MUTATION = `
       descripcion
       tipoUso
       permiteMultiple
-      permiteVincularReportes
       estado
       fechaCreacion
       fechaActualizacion

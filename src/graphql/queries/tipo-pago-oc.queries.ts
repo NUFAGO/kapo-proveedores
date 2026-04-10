@@ -15,12 +15,12 @@ export const LISTAR_TIPOS_PAGO_OC_QUERY = `
       requiereAnteriorPagado
       porcentajeMaximo
       porcentajeMinimo
+      permiteVincularReportes
       categoria {
         id
         nombre
         tipoUso
         permiteMultiple
-        permiteVincularReportes
       }
       checklist {
         id
@@ -47,12 +47,12 @@ export const OBTENER_TIPO_PAGO_OC_QUERY = `
       requiereAnteriorPagado
       porcentajeMaximo
       porcentajeMinimo
+      permiteVincularReportes
       categoria {
         id
         nombre
         tipoUso
         permiteMultiple
-        permiteVincularReportes
       }
       checklist {
         id
@@ -85,12 +85,12 @@ export const OBTENER_TIPOS_PAGO_POR_EXPEDIENTE_QUERY = `
       requiereAnteriorPagado
       porcentajeMaximo
       porcentajeMinimo
+      permiteVincularReportes
       categoria {
         id
         nombre
         tipoUso
         permiteMultiple
-        permiteVincularReportes
       }
       checklist {
         id

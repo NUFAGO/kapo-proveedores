@@ -158,6 +158,7 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
         requiereAnteriorPagado
         porcentajeMaximo
         porcentajeMinimo
+        permiteVincularReportes
         categoria {
           id
           nombre
@@ -207,6 +208,7 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
         expedienteId
         checklistId
         obligatorio
+        bloqueaSolicitudPago
         estado
         fechaCarga
         checklist {
@@ -215,6 +217,13 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
           nombre
           descripcion
           categoriaChecklistId
+          categoria {
+            id
+            nombre
+            descripcion
+            tipoUso
+            estado
+          }
           activo
           fechaActualizacion
           requisitos {

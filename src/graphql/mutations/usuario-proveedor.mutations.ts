@@ -76,3 +76,21 @@ export const CAMBIAR_ESTADO_USUARIO_PROVEEDOR_MUTATION = `
     }
   }
 `;
+
+export const CAMBIAR_CONTRASENA_USUARIO_PROVEEDOR_MUTATION = `
+  mutation CambiarContrasenaUsuarioProveedor($id: ID!, $nuevaPassword: String!) {
+    cambiarContrasenaUsuarioProveedor(id: $id, nuevaPassword: $nuevaPassword) {
+      id
+      nombres
+      apellido_paterno
+      apellido_materno
+      dni
+      username
+      proveedor_id
+      proveedor_nombre
+      estado
+      fecha_creacion
+      fecha_actualizacion
+    }
+  }
+`;

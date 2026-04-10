@@ -16,7 +16,6 @@ export interface CategoriaChecklist {
   descripcion?: string
   tipoUso: 'pago' | 'documentos_oc'
   permiteMultiple?: boolean
-  permiteVincularReportes?: boolean
   estado: 'activo' | 'inactivo'
   fechaCreacion: string
   fechaActualizacion?: string
@@ -27,7 +26,6 @@ export interface CategoriaChecklistInput {
   descripcion?: string
   tipoUso: 'pago' | 'documentos_oc'
   permiteMultiple?: boolean
-  permiteVincularReportes?: boolean
   estado: 'activo' | 'inactivo'
 }
 

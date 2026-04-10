@@ -20,7 +20,6 @@ interface CategoriaChecklistFormData {
   descripcion: string;
   tipoUso: 'pago' | 'documentos_oc' | '';
   permiteMultiple: boolean;
-  permiteVincularReportes: boolean;
   estado: 'activo' | 'inactivo';
 }
 
@@ -30,7 +29,6 @@ export default function CategoriaChecklistForm({ isOpen, onClose, categoriaCheck
     descripcion: '',
     tipoUso: '' as 'pago' | 'documentos_oc' | '',
     permiteMultiple: false,
-    permiteVincularReportes: false,
     estado: 'activo' as 'activo' | 'inactivo'
   });
 
@@ -63,7 +61,6 @@ export default function CategoriaChecklistForm({ isOpen, onClose, categoriaCheck
         descripcion: categoria.descripcion || '',
         tipoUso: categoria.tipoUso,
         permiteMultiple: categoria.permiteMultiple || false,
-        permiteVincularReportes: categoria.permiteVincularReportes || false,
         estado: categoria.estado
       });
     }
@@ -77,7 +74,6 @@ export default function CategoriaChecklistForm({ isOpen, onClose, categoriaCheck
         descripcion: '',
         tipoUso: '',
         permiteMultiple: false,
-        permiteVincularReportes: false,
         estado: 'activo'
       });
       setErrors({});
@@ -96,8 +92,7 @@ export default function CategoriaChecklistForm({ isOpen, onClose, categoriaCheck
       setFormData(prev => ({ 
         ...prev, 
         tipoUso: value,
-        permiteMultiple: false,
-        permiteVincularReportes: false
+        permiteMultiple: false
       }));
     }
   };
@@ -144,8 +139,7 @@ export default function CategoriaChecklistForm({ isOpen, onClose, categoriaCheck
         tipoUso: formData.tipoUso as 'pago' | 'documentos_oc',
         estado: formData.estado,
         ...(formData.tipoUso === 'pago' && {
-          permiteMultiple: formData.permiteMultiple,
-          permiteVincularReportes: formData.permiteVincularReportes
+          permiteMultiple: formData.permiteMultiple
         })
       };
       
@@ -303,20 +297,6 @@ export default function CategoriaChecklistForm({ isOpen, onClose, categoriaCheck
               />
               <label htmlFor="permiteMultiple" className="text-xs text-text-primary">
                 Permite múltiples solicitudes
-              </label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="permiteVincularReportes"
-                checked={formData.permiteVincularReportes}
-                onChange={(e) => handleInputChange('permiteVincularReportes', e.target.checked)}
-                disabled={isLoading}
-                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
-              />
-              <label htmlFor="permiteVincularReportes" className="text-xs text-text-primary">
-                Permite vincular reportes
               </label>
             </div>
           </div>

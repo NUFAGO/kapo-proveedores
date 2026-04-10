@@ -165,28 +165,14 @@ export default function CategoriaChecklistView({
           <div className="space-y-2">
             <h3 className="font-bold text-xs">Configuración de Pagos</h3>
             <div className="p-2 rounded-lg border border-border">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div className="flex items-center gap-2 p-2 border border-border rounded">
-                  <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 shrink-0">
-                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">M</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold">Permite Múltiple</div>
-                    <div className="text-xs text-muted-foreground">
-                      {categoria.permiteMultiple ? 'Sí, permite múltiples solicitudes' : 'No, solo una solicitud'}
-                    </div>
-                  </div>
+              <div className="flex items-center gap-2 p-2 border border-border rounded">
+                <div className="w-5 h-5 rounded flex items-center justify-center bg-blue-100 dark:bg-blue-900/30 shrink-0">
+                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">M</span>
                 </div>
-                
-                <div className="flex items-center gap-2 p-2 border border-border rounded">
-                  <div className="w-5 h-5 rounded flex items-center justify-center bg-green-100 dark:bg-green-900/30 shrink-0">
-                    <span className="text-xs font-bold text-green-600 dark:text-green-400">R</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold">Vincular Reportes</div>
-                    <div className="text-xs text-muted-foreground">
-                      {categoria.permiteVincularReportes ? 'Sí, permite vincular reportes' : 'No, no permite vincular'}
-                    </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold">Permite Múltiple</div>
+                  <div className="text-xs text-muted-foreground">
+                    {categoria.permiteMultiple ? 'Sí, permite múltiples solicitudes' : 'No, solo una solicitud'}
                   </div>
                 </div>
               </div>
@@ -205,7 +191,7 @@ export default function CategoriaChecklistView({
                 </div>
                 <div className="text-xs text-green-700 dark:text-green-300">
                   Esta categoría está configurada para checklists de documentos OC. 
-                  No aplica configuración de múltiples solicitudes o vinculación de reportes.
+                  No aplica configuración de múltiples solicitudes.
                 </div>
               </div>
             </div>

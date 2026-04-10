@@ -91,7 +91,7 @@ export default function OrdenesProveedorPage() {
     configurado: { label: 'Configurado', color: 'bg-blue-500' },
     activo: { label: 'Activo', color: 'bg-green-500' },
     en_proceso: { label: 'En Proceso', color: 'bg-yellow-500' },
-    en_ejecucion: { label: 'En ejecución', color: 'bg-sky-500' },
+    en_ejecucion: { label: 'Ejecución', color: 'bg-sky-500' },
     completado: { label: 'Completado', color: 'bg-emerald-500' },
     cancelado: { label: 'Cancelado', color: 'bg-red-500' }
   }

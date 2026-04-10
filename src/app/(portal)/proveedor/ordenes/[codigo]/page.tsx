@@ -22,14 +22,30 @@ import {
   Download,
   PencilLine,
   Banknote,
+  Lock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useExpedientePorCodigo, useExpedienteCompleto, useSolicitudesPorExpediente, SolicitudPagoResumen, TipoPagoOC, DocumentoOC } from '@/hooks/useExpedientePago'
+import { useExpedientePorCodigo, useExpedienteCompleto, useSolicitudesPorExpediente, SolicitudPagoResumen, TipoPagoOC, DocumentoOC, Requisito } from '@/hooks/useExpedientePago'
 import { useProcesarChecklistProveedor } from '@/hooks/useProcesarChecklistProveedor'
 import { useProcesarChecklistSubsanacion } from '@/hooks/useProcesarChecklistSubsanacion'
 import { ChecklistModal } from './components/checklistModal'
 import type { EntidadAprobacionRef } from '@/hooks/useAprobacionYDetalleChecklistPorEntidad'
+
+function etiquetaPlantillaOFormulario(r: Requisito): string {
+  if (r.tipoRequisito === 'documento') {
+    return (
+      r.plantillaDocumento?.nombrePlantilla?.trim() ||
+      r.plantillaDocumento?.codigo?.trim() ||
+      'Sin plantilla asignada'
+    )
+  }
+  const nombre = r.formulario?.nombre?.trim()
+  if (nombre) {
+    return r.formulario?.version != null ? `${nombre} (v${r.formulario.version})` : nombre
+  }
+  return 'Sin formulario asignado'
+}
 
 function Sk({ className }: { className?: string }) {
   return (
@@ -250,8 +266,19 @@ export default function ExpedienteSeguimientoPage() {
   ).toLowerCase()
   const expedienteCompletado = estadoExpediente === 'completado'
 
+  /** Solo `bloqueaSolicitudPago === true` cuenta; null/false no bloquean. */
+  const documentosParaBloqueo =
+    expedienteCompleto?.obtenerExpedienteCompleto?.documentos ?? []
+  const bloqueoSolicitudesPorDocumentoOc = documentosParaBloqueo.some(
+    (d: DocumentoOC) =>
+      d.bloqueaSolicitudPago === true &&
+      (d.estado || '').toUpperCase() !== 'APROBADO'
+  )
+  const puedeMostrarNuevaSolicitud =
+    !expedienteCompletado && !bloqueoSolicitudesPorDocumentoOc
+
   const handleIniciarSolicitud = (tipoPagoId: string) => {
-    if (expedienteCompletado) return
+    if (expedienteCompletado || bloqueoSolicitudesPorDocumentoOc) return
     setChecklistEntidadAprobacion(null)
     setSelectedTipoPago(tipoPagoId)
     setShowChecklistModal(true)
@@ -331,6 +358,12 @@ export default function ExpedienteSeguimientoPage() {
       </div>
     )
   }
+
+  const expedienteData = expedienteCompleto.obtenerExpedienteCompleto
+  const montoContratoParaPct =
+    expedienteData.montoContrato != null && Number.isFinite(Number(expedienteData.montoContrato))
+      ? Number(expedienteData.montoContrato)
+      : null
 
   return (
     <div className="space-y-3">
@@ -457,7 +490,7 @@ export default function ExpedienteSeguimientoPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-text-primary text-sm">
-                            DOC-{documento.checklist?.nombre}
+                            {documento.checklist?.nombre}
                           </h3>
                           <Badge variant="outline" className="text-xs">
                             {documento.estado}
@@ -471,18 +504,40 @@ export default function ExpedienteSeguimientoPage() {
                         <p className="text-xs text-text-secondary mb-2">
                           {documento.checklist?.descripcion}
                         </p>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {documento.checklist?.categoria?.nombre}
-                          </Badge>
-                        </div>
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center gap-2">
-                      <p className="text-xs text-text-secondary">
-                        {documento.checklist?.requisitos?.length || 0} requisitos
+                    {(() => {
+                      const requisitos = [...(documento.checklist?.requisitos || [])].sort(
+                        (a, b) => (a.orden ?? 0) - (b.orden ?? 0)
+                      )
+                      return (
+                        <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                          <span className="text-xs text-text-secondary shrink-0">Requisitos:</span>
+                          {requisitos.length > 0 ? (
+                            requisitos.map((r) => (
+                              <Badge
+                                key={r.id}
+                                variant="outline"
+                                className="h-auto max-w-full rounded-md border-border-color bg-muted/30 px-2 py-0.5 text-[11px] font-normal text-text-primary shadow-none whitespace-normal text-left leading-snug"
+                              >
+                                {etiquetaPlantillaOFormulario(r)}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-text-secondary">—</span>
+                          )}
+                        </div>
+                      )
+                    })()}
+
+                    {documento.bloqueaSolicitudPago === true && estadoOc !== 'APROBADO' && (
+                      <p className="text-[11px] text-violet-800 dark:text-violet-200 mb-2 leading-snug">
+                        Bloquea solicitudes: debe aprobarse primero.
                       </p>
+                    )}
+
+                    <div className="flex justify-end gap-2">
                       {mostrarAccionHistorialDocOc ? (
                         <Button
                           type="button"
@@ -522,12 +577,22 @@ export default function ExpedienteSeguimientoPage() {
       {/* Tipos de Pago OC - Opciones Disponibles */}
       <div className="bg-background backdrop-blur-sm rounded-lg card-shadow overflow-hidden">
         <div className="bg-card-bg px-4 py-3 border-b border-border-color">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2 ">
-              <Banknote className="w-4 h-4 text-green-600 dark:text-green-400" />
-              Solicitudes de Pago Disponibles
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2 flex-wrap">
+              <Banknote className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+              <span>Solicitudes de Pago Disponibles</span>
+              {bloqueoSolicitudesPorDocumentoOc && (
+                <Badge
+                  variant="outline"
+                  className="h-6 w-6 shrink-0 p-0 flex items-center justify-center rounded-full border-violet-400/60 bg-violet-50 text-violet-800 dark:bg-violet-950/40 dark:text-violet-200 dark:border-violet-500/50"
+                  title="Las solicitudes de pago están bloqueadas hasta aprobar la documentación pendiente"
+                  aria-label="Solicitudes de pago bloqueadas por documentación pendiente"
+                >
+                  <Lock className="h-3.5 w-3.5" aria-hidden />
+                </Badge>
+              )}
             </h2>
-            <Badge variant="secondary" className="text-xs">
+            <Badge variant="secondary" className="text-xs shrink-0">
               {(expedienteCompleto?.obtenerExpedienteCompleto?.tiposPago || []).length} tipos de pago
             </Badge>
           </div>
@@ -542,58 +607,94 @@ export default function ExpedienteSeguimientoPage() {
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-text-primary text-sm">
-                          TP-{tipoPago.orden}
-                        </h3>
+                      <h4 className="text-sm font-medium text-text-primary mb-1">
+                        {tipoPago.categoria?.nombre || 'Tipo de Pago'}
+                      </h4>
                         <Badge variant="outline" className="text-xs">
                           Orden {tipoPago.orden}
                         </Badge>
                       </div>
-                      <h4 className="text-sm font-medium text-text-primary mb-1">
-                        {tipoPago.categoria?.nombre || 'Tipo de Pago'}
-                      </h4>
+
                       <p className="text-xs text-text-secondary mb-2">
                         {tipoPago.categoria?.descripcion || 'Sin descripción'}
                       </p>
+                      
                     </div>
-                    <div className="text-right">
-                      <p className="text-xs text-text-secondary">Porcentaje Máximo</p>
-                      <p className="text-sm font-bold text-blue-600">
-                        {tipoPago.porcentajeMaximo ? `${tipoPago.porcentajeMaximo}%` : 'N/A'}
-                      </p>
-                    </div>
+                    {(tipoPago.porcentajeMaximo != null ||
+                      (tipoPago.porcentajeMinimo != null && tipoPago.porcentajeMinimo > 0)) && (
+                      <div className="text-right space-y-1.5 shrink-0 max-w-[11rem]">
+                        {tipoPago.porcentajeMaximo != null && (
+                          <div>
+                            <p className="text-[10px] text-text-secondary leading-tight">Máximo</p>
+                            <p className="text-sm font-bold text-blue-600 tabular-nums leading-tight">
+                              {montoContratoParaPct != null && montoContratoParaPct > 0 ? (
+                                <>
+                                  S/{' '}
+                                  {(
+                                    (montoContratoParaPct * tipoPago.porcentajeMaximo) /
+                                    100
+                                  ).toLocaleString('es-PE', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </>
+                              ) : (
+                                <span>{tipoPago.porcentajeMaximo}%</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+                        {tipoPago.porcentajeMinimo != null && tipoPago.porcentajeMinimo > 0 && (
+                          <div>
+                            <p className="text-[10px] text-text-secondary leading-tight">Mínimo</p>
+                            <p className="text-sm font-bold text-sky-600 dark:text-sky-400 tabular-nums leading-tight">
+                              {montoContratoParaPct != null && montoContratoParaPct > 0 ? (
+                                <>
+                                  S/{' '}
+                                  {(
+                                    (montoContratoParaPct * tipoPago.porcentajeMinimo) /
+                                    100
+                                  ).toLocaleString('es-PE', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </>
+                              ) : (
+                                <span>{tipoPago.porcentajeMinimo}%</span>
+                              )}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Detalles del tipo de pago */}
-                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                    <div>
-                      <p className="text-text-secondary">Categoría</p>
-                      <p className="font-medium text-text-primary">
-                        {tipoPago.categoria?.nombre || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary">Modo Restricción</p>
-                      <p className="font-medium text-text-primary capitalize">
-                        {tipoPago.modoRestriccion?.replace('_', ' ') || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary">Checklist</p>
-                      <p className="font-medium text-text-primary">
-                        {tipoPago.checklist?.codigo || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-text-secondary">Requiere Anterior</p>
-                      <p className="font-medium text-text-primary">
-                        {tipoPago.requiereAnteriorPagado ? 'Sí' : 'No'}
-                      </p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const requisitos = [...(tipoPago.checklist?.requisitos || [])].sort(
+                      (a, b) => (a.orden ?? 0) - (b.orden ?? 0)
+                    )
+                    return (
+                      <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                        <span className="text-xs text-text-secondary shrink-0">Requisitos:</span>
+                        {requisitos.length > 0 ? (
+                          requisitos.map((r) => (
+                            <Badge
+                              key={r.id}
+                              variant="outline"
+                              className="h-auto max-w-full rounded-md border-border-color bg-muted/30 px-2 py-0.5 text-[11px] font-normal text-text-primary shadow-none whitespace-normal text-left leading-snug"
+                            >
+                              {etiquetaPlantillaOFormulario(r)}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-text-secondary">—</span>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                   <div className="flex justify-end">
-                    {!expedienteCompletado && (
+                    {puedeMostrarNuevaSolicitud && (
                       <Button
                         variant="custom"
                         color="blue"
@@ -722,6 +823,8 @@ export default function ExpedienteSeguimientoPage() {
           expedienteId={expedienteCompleto.obtenerExpedienteCompleto.id}
           entidadAprobacion={checklistEntidadAprobacion}
           montoDisponible={expedienteCompleto.obtenerExpedienteCompleto.montoDisponible}
+          montoContrato={expedienteCompleto.obtenerExpedienteCompleto.montoContrato}
+          solicitudesExpediente={solicitudes}
           tiposPago={expedienteCompleto.obtenerExpedienteCompleto.tiposPago || []}
           documentos={expedienteCompleto.obtenerExpedienteCompleto.documentos || []}
           selectedTipoPagoId={selectedTipoPago || undefined}

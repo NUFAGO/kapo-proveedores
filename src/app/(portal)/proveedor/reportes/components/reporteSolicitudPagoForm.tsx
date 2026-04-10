@@ -23,6 +23,7 @@ import {
   X,
   ImagePlus,
   Eye,
+  BookOpen,
 } from 'lucide-react';
 
 const MAX_IMAGENES_POR_ACTIVIDAD = 5;
@@ -474,8 +475,8 @@ export default function ReporteSolicitudPagoForm({
 
   const modalTitle = readOnly ? (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800/50">
-        <ClipboardPlus className="h-5 w-5 text-slate-600 dark:text-slate-300" aria-hidden />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
+        <BookOpen className="h-5 w-5 text-slate-600 dark:text-slate-300" aria-hidden />
       </div>
       <div className="min-w-0">
         <h2 className="text-sm font-semibold text-text-primary">Reporte de solicitud</h2>
@@ -557,7 +558,7 @@ export default function ReporteSolicitudPagoForm({
         {/* Datos del reporte — mismo ritmo que "Datos del Informe" */}
         <div className="space-y-2">
           <h3 className={`${SECTION_TITLE} flex items-center gap-2`}>
-            <FileText className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden />
+            <FileText className="h-4 w-4 shrink-0 text-blue-400" aria-hidden />
             Datos del reporte
           </h3>
           <div className={`${SECTION_CARD} p-3`}>
@@ -634,7 +635,7 @@ export default function ReporteSolicitudPagoForm({
         {/* Cuadrillas — título arriba; añadir al final de la lista, centrado */}
         <div className="space-y-3">
           <h3 className={`${SECTION_TITLE} flex items-center gap-2`}>
-            <Users className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden />
+            <Users className="h-4 w-4 shrink-0 text-blue-400" aria-hidden />
             Cuadrillas en campo <span className="font-normal text-text-secondary">({cuadrillas.length})</span>
           </h3>
           {cuadrillas.map((cq, ci) => (

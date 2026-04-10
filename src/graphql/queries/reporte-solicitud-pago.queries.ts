@@ -54,6 +54,37 @@ export const LISTAR_REPORTES_POR_SOLICITUD_PAGO_QUERY = `
   }
 `;
 
+export const LISTAR_REPORTES_SOLICITUD_PAGO_ADMIN_QUERY = `
+  query ListarReportesSolicitudPagoAdmin($filter: ReporteSolicitudPagoAdminFilter) {
+    listarReportesSolicitudPagoAdmin(filter: $filter) {
+      data {
+        id
+        codigo
+        proveedorId
+        identificadorSolicitudPago
+        solicitudPagoId
+        fecha
+        maestroResponsable
+        observacionesGenerales
+        createdAt
+        updatedAt
+        solicitudPago {
+          id
+          estado
+          expediente {
+            ocCodigo
+            descripcion
+          }
+        }
+      }
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+`;
+
 export const LISTAR_REPORTES_SOLICITUD_PAGO_POR_PROVEEDOR_QUERY = `
   query ListarReportesSolicitudPagoPorProveedor(
     $proveedorId: String!

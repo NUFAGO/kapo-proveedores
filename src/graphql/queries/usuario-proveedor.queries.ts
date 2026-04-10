@@ -5,6 +5,30 @@
  * Flujo: Importado por hooks → Ejecutado por GraphQL client
  */
 
+export const GET_USUARIOS_PROVEEDOR_PAGINADO_QUERY = `
+  query UsuariosProveedorPaginado($filter: UsuarioProveedorListFilter) {
+    usuariosProveedorPaginado(filter: $filter) {
+      data {
+        id
+        nombres
+        apellido_paterno
+        apellido_materno
+        dni
+        username
+        proveedor_id
+        proveedor_nombre
+        estado
+        fecha_creacion
+        fecha_actualizacion
+      }
+      total
+      page
+      limit
+      totalPages
+    }
+  }
+`;
+
 export const GET_USUARIOS_PROVEEDOR_QUERY = `
   query GetUsuariosProveedor {
     usuariosProveedor {

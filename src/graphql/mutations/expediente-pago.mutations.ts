@@ -73,3 +73,18 @@ export const GUARDAR_EXPEDIENTE_CON_ITEMS_MUTATION = `
     }
   }
 `;
+
+export const ACTUALIZAR_EXPEDIENTE_ITEMS_MUTATION = `
+  mutation ActualizarExpedienteItems($input: ActualizarExpedienteItemsInput!) {
+    actualizarExpedienteItems(input: $input) {
+      id
+      ocId
+      ocCodigo
+      estado
+      proveedorNombre
+      montoContrato
+      fechaCreacion
+      fechaConfigurado
+    }
+  }
+`;

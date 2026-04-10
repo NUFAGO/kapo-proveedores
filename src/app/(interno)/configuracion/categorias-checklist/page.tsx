@@ -139,20 +139,6 @@ export default function CategoriaChecklistPage() {
       )
     },
     {
-      key: 'permiteVincularReportes',
-      header: 'Reportes',
-      className: 'text-center',
-      render: (value?: boolean) => (
-        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-          value 
-            ? 'text-green-600 dark:text-green-400' 
-            : 'text-gray-600 dark:text-gray-400'
-        }`}>
-          {value ? 'SÍ' : 'NO'}
-        </span>
-      )
-    },
-    {
       key: 'estado',
       header: 'Estado',
       className: 'text-center',

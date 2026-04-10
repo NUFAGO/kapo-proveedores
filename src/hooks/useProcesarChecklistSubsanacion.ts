@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast'
 import { graphqlRequest } from '@/lib/graphql-client'
 import { PROCESAR_CHECKLIST_SUBSANACION_MUTATION } from '@/graphql'
 import type { ChecklistProveedorSubsanacionInput } from '@/app/(portal)/proveedor/ordenes/[codigo]/components/checklistPayload'
+import { reportesPorSolicitudPagoQueryKey } from '@/hooks/useReporteSolicitudPago'
 
 export interface ProcesarChecklistSubsanacionResult {
   procesarChecklistSubsanacion: {
@@ -34,6 +35,17 @@ export function useProcesarChecklistSubsanacion() {
       queryClient.invalidateQueries({
         queryKey: ['aprobacion-detalle-checklist-por-entidad', ent, variables.entidadId],
       })
+
+      if (
+        variables.context === 'solicitud_pago' &&
+        variables.reporteSolicitudPagoIds?.length
+      ) {
+        queryClient.invalidateQueries({
+          queryKey: reportesPorSolicitudPagoQueryKey(variables.entidadId),
+        })
+        queryClient.invalidateQueries({ queryKey: ['reportes-solicitud-pago-por-proveedor'] })
+        queryClient.invalidateQueries({ queryKey: ['reportes-solicitud-pago-infinite'] })
+      }
     },
     onError: (error: unknown) => {
       const msg = error instanceof Error ? error.message : 'Error al enviar la subsanación'

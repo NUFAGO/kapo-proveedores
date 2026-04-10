@@ -2,7 +2,7 @@
 //select adaptable
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, X, Search, Loader2 } from 'lucide-react';
+import { ChevronDown, X, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SelectSearchOption {
@@ -21,6 +21,10 @@ export interface SelectSearchProps {
   showSearchIcon?: boolean; // Si true, muestra el ícono de lupa
   onSearch?: (searchTerm: string) => Promise<SelectSearchOption[]>; // Búsqueda en servidor opcional
   minCharsForSearch?: number; // Mínimo de caracteres para activar búsqueda en servidor (default: 2)
+  /** Cerrado: mismo aspecto que `Select` (botón). Abierto: búsqueda + listado como siempre. */
+  collapsedAsSelect?: boolean;
+  /** Con `collapsedAsSelect`, placeholder del `<input>` al estar abierto; si no se pasa, se usa `placeholder`. */
+  searchPlaceholder?: string;
 }
 
 export function SelectSearch({
@@ -34,6 +38,8 @@ export function SelectSearch({
   showSearchIcon = false,
   onSearch,
   minCharsForSearch = 2,
+  collapsedAsSelect = false,
+  searchPlaceholder,
 }: SelectSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value || '');
@@ -261,7 +267,7 @@ export function SelectSearch({
     setInputValue('');
     onChange(null);
     setIsOpen(false);
-    if (inputRef.current) {
+    if (!collapsedAsSelect && inputRef.current) {
       inputRef.current.focus();
     }
   };
@@ -308,9 +314,72 @@ export function SelectSearch({
     ? (otherInputClasses.includes('text-xs') ? 'pl-6' : 'pl-7')
     : '';
 
+  const showCollapsedSelect = collapsedAsSelect && !isOpen;
+
+  const selectLikeBase =
+    'w-full bg-transparent border border-[var(--border-color)] text-[var(--text-primary)] rounded-md focus:outline-none px-2 py-2 text-xs';
+  const selectLikeClasses = otherInputClasses
+    ? `${selectLikeBase} ${otherInputClasses}`.trim()
+    : selectLikeBase;
+
+  const collapsedDisplayLabel = selectedOption
+    ? selectedOption.label
+    : value
+      ? String(value)
+      : placeholder;
+
+  const collapsedShowPlaceholder = !selectedOption && (value == null || value === '');
+
+  const handleCollapsedButtonKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Escape') {
+      e.currentTarget.blur();
+    } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+      e.preventDefault();
+      if (!disabled) setIsOpen(true);
+    }
+  };
+
   return (
     <div ref={containerRef} className={cn('relative', widthClass)}>
-      {/* Input editable - mismo estilo que el Input original */}
+      {showCollapsedSelect ? (
+        <button
+          type="button"
+          onClick={() => {
+            if (!disabled) setIsOpen(true);
+          }}
+          onKeyDown={handleCollapsedButtonKeyDown}
+          disabled={disabled}
+          className={cn(
+            selectLikeClasses,
+            'text-left cursor-pointer relative h-full min-h-0',
+            disabled && 'opacity-50 cursor-not-allowed',
+            collapsedShowPlaceholder && 'text-text-secondary',
+            'focus:ring-2 focus:ring-blue-500'
+          )}
+        >
+          <span className="truncate pr-6 block text-left">{collapsedDisplayLabel}</span>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 shrink-0 pointer-events-none">
+            {!!value && value !== '' && !disabled && (
+              <span
+                onClick={(e) => handleClear(e)}
+                className="text-text-secondary hover:text-text-primary p-0.5 pointer-events-auto cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleClear(e as unknown as React.MouseEvent);
+                  }
+                }}
+              >
+                <X className="h-2.5 w-2.5" />
+              </span>
+            )}
+            <ChevronDown className="h-2.5 w-2.5 text-text-secondary transition-transform shrink-0" />
+          </div>
+        </button>
+      ) : (
       <div className="relative flex items-center w-full">
         {showSearchIcon && (
           <Search className="absolute left-1.5 top-1/2 transform -translate-y-1/2 h-2.5 w-2.5 text-text-secondary pointer-events-none z-10" />
@@ -322,7 +391,7 @@ export function SelectSearch({
           onChange={handleInputChange}
           onFocus={handleInputFocus}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={collapsedAsSelect && searchPlaceholder != null ? searchPlaceholder : placeholder}
           disabled={disabled}
           className={cn(
             baseClasses,
@@ -363,6 +432,7 @@ export function SelectSearch({
           />
         </div>
       </div>
+      )}
 
       {/* Dropdown con opciones filtradas - renderizado con portal */}
       {isOpen && !disabled && filteredOptions.length > 0 && createPortal(

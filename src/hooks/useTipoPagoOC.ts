@@ -23,12 +23,12 @@ export interface TipoPagoOC {
   requiereAnteriorPagado?: boolean
   porcentajeMaximo?: number
   porcentajeMinimo?: number
+  permiteVincularReportes?: boolean
   categoria?: {
     id: string
     nombre: string
     tipoUso: string
     permiteMultiple: boolean
-    permiteVincularReportes: boolean
   }
   checklist?: {
     id: string
@@ -49,6 +49,7 @@ export interface TipoPagoOCInput {
   requiereAnteriorPagado?: boolean
   porcentajeMaximo?: number
   porcentajeMinimo?: number
+  permiteVincularReportes?: boolean
 }
 
 export interface TipoPagoOCFilter {

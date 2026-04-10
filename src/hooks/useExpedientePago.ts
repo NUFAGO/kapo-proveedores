@@ -32,7 +32,9 @@ import {
 
   ELIMINAR_EXPEDIENTE_PAGO_MUTATION,
 
-  GUARDAR_EXPEDIENTE_CON_ITEMS_MUTATION
+  GUARDAR_EXPEDIENTE_CON_ITEMS_MUTATION,
+
+  ACTUALIZAR_EXPEDIENTE_ITEMS_MUTATION
 
 } from '@/graphql'
 
@@ -209,6 +211,8 @@ export interface TipoPagoOC {
 
   porcentajeMinimo?: number
 
+  permiteVincularReportes?: boolean
+
   categoria?: {
 
     id: string
@@ -264,6 +268,8 @@ export interface DocumentoOC {
   checklistId: string
 
   obligatorio: boolean
+
+  bloqueaSolicitudPago?: boolean
 
   estado: string
 
@@ -697,7 +703,7 @@ export function useGuardarExpedienteConItems() {
 
   return useMutation({
 
-    mutationFn: (input: {
+    mutationFn: async (input: {
 
       ocData: {
 
@@ -722,11 +728,12 @@ export function useGuardarExpedienteConItems() {
       adminCreadorId: string
 
       solicitudesPago: Array<{
-
         categoriaChecklistId: string
-
         plantillaChecklistId: string
-
+        orden?: number
+        porcentajeMaximo?: number
+        porcentajeMinimo?: number
+        permiteVincularReportes?: boolean
       }>
 
       documentosOC: Array<{
@@ -735,17 +742,38 @@ export function useGuardarExpedienteConItems() {
 
         plantillaChecklistId: string
 
+        obligatorio?: boolean
+
+        bloqueaSolicitudPago?: boolean
+
       }>
 
-    }) => graphqlRequest(GUARDAR_EXPEDIENTE_CON_ITEMS_MUTATION, { input }),
+    }) => {
 
-    onSuccess: (_, variables) => {
+      const data = await graphqlRequest(GUARDAR_EXPEDIENTE_CON_ITEMS_MUTATION, { input })
+
+      const row = (data as { guardarExpedienteConItems?: { id?: string; ocCodigo?: string } })
+        ?.guardarExpedienteConItems
+
+      const codigo = row?.ocCodigo ?? input.ocData.codigo
+
+      const expedienteId = row?.id
+
+      await queryClient.refetchQueries({ queryKey: ['expediente-por-codigo', codigo] })
+
+      if (expedienteId) {
+
+        await queryClient.refetchQueries({ queryKey: ['expediente-completo', expedienteId] })
+
+      }
+
+      return data
+
+    },
+
+    onSuccess: () => {
 
       queryClient.invalidateQueries({ queryKey: ['expedientes-pago'] })
-
-      queryClient.invalidateQueries({ queryKey: ['expediente-por-codigo', variables.ocData.codigo] })
-
-      queryClient.invalidateQueries({ queryKey: ['expediente-completo'] })
 
       queryClient.invalidateQueries({ queryKey: ['ordenes-compra'] })
 
@@ -754,6 +782,94 @@ export function useGuardarExpedienteConItems() {
     onError: (error) => {
 
       console.error('Error guardando expediente con items:', error)
+
+    }
+
+  })
+
+}
+
+export function useActualizarExpedienteItems() {
+
+  const queryClient = useQueryClient()
+
+  return useMutation({
+
+    mutationFn: async (input: {
+
+      expedienteId: string
+
+      /** Código OC para refetch de `expediente-por-codigo` si la mutación no devuelve `ocCodigo`. */
+      ocCodigo?: string
+
+      solicitudesPago: Array<{
+
+        id?: string
+
+        categoriaChecklistId: string
+
+        plantillaChecklistId: string
+
+        orden?: number
+
+        porcentajeMaximo?: number
+
+        porcentajeMinimo?: number
+
+        permiteVincularReportes?: boolean
+
+      }>
+
+      documentosOC: Array<{
+
+        id?: string
+
+        categoriaChecklistId: string
+
+        plantillaChecklistId: string
+
+        obligatorio?: boolean
+
+        bloqueaSolicitudPago?: boolean
+
+      }>
+
+    }) => {
+
+      const { ocCodigo: ocCodigoRefetch, ...inputApi } = input
+
+      const data = await graphqlRequest(ACTUALIZAR_EXPEDIENTE_ITEMS_MUTATION, { input: inputApi })
+
+      const row = (data as { actualizarExpedienteItems?: { id?: string; ocCodigo?: string } })
+        ?.actualizarExpedienteItems
+
+      const expedienteId = row?.id ?? input.expedienteId
+
+      const codigo = row?.ocCodigo ?? ocCodigoRefetch
+
+      await queryClient.refetchQueries({ queryKey: ['expediente-completo', expedienteId] })
+
+      if (codigo) {
+
+        await queryClient.refetchQueries({ queryKey: ['expediente-por-codigo', codigo] })
+
+      }
+
+      return data
+
+    },
+
+    onSuccess: () => {
+
+      queryClient.invalidateQueries({ queryKey: ['expedientes-pago'] })
+
+      queryClient.invalidateQueries({ queryKey: ['ordenes-compra'] })
+
+    },
+
+    onError: (error) => {
+
+      console.error('Error actualizando ítems del expediente:', error)
 
     }
 
