@@ -48,7 +48,7 @@ export default function PlantillaChecklistForm({ isOpen, onClose, plantillaCheck
   // Opciones iniciales para el select search de plantillas de documento
   const plantillaDocumentoOptions = plantillasDocumentoData?.plantillasDocumento?.map((plantilla: any) => ({
     value: plantilla.id,
-    label: `${plantilla.nombrePlantilla} - ${plantilla.tipoDocumento?.nombre || 'Sin tipo'}`
+    label: `${plantilla.nombrePlantilla} (${plantilla.codigo})`
   })) || [];
 
   // Función para buscar plantillas usando el hook

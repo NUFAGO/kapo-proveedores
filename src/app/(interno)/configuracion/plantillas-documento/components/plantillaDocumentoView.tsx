@@ -81,7 +81,7 @@ export default function PlantillaDocumentoView({ isOpen, onClose, plantilla, onE
                 <div className="min-w-0">
                   <div className="text-xs font-semibold truncate">{plantilla.nombrePlantilla || "-"}</div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {plantilla.tipoDocumento?.nombre || plantilla.tipoDocumentoId || "-"}
+                    {plantilla.codigo}
                   </div>
                 </div>
               </div>
@@ -126,12 +126,6 @@ export default function PlantillaDocumentoView({ isOpen, onClose, plantilla, onE
                 <label className="block text-xs font-semibold mb-1">Código</label>
                 <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
                   {plantilla.codigo || "-"}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold mb-1">Tipo Documento</label>
-                <div className="text-xs font-medium text-primary p-1 bg-gray-100/60 dark:bg-[black]/10 rounded">
-                  {plantilla.tipoDocumento?.nombre || plantilla.tipoDocumentoId || "-"}
                 </div>
               </div>
               <div>

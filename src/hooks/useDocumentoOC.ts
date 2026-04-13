@@ -19,47 +19,39 @@ import {
 export interface DocumentoOC {
   id: string
   expedienteId: string
-  tipoDocumentoId: string
-  plantillaDocumentoId?: string
-  usuarioId?: string
-  adminRevisorId?: string
+  checklistId: string
   obligatorio: boolean
-  archivos: Array<{
-    url: string
-    nombreOriginal: string
-    mimeType: string
-    tamanioBytes: number
-    fechaSubida: string
-  }>
+  bloqueaSolicitudPago?: boolean
   estado: string
   fechaCarga?: string
-  comentarios?: string
-  tipoDocumento?: {
+  checklist?: {
     id: string
+    codigo: string
     nombre: string
-    descripcion: string
-    unicoPorOc: boolean
-  }
-  plantillaDocumento?: {
-    id: string
-    nombrePlantilla: string
-    plantillaUrl: string
+    descripcion?: string
+    categoriaChecklistId: string
     activo: boolean
+  }
+  expediente?: {
+    id: string
+    ocCodigo: string
+    estado: string
   }
 }
 
 export interface DocumentoOCInput {
   expedienteId: string
-  tipoDocumentoId: string
-  plantillaDocumentoId?: string
+  checklistId: string
   obligatorio: boolean
+  bloqueaSolicitudPago?: boolean
 }
 
 export interface DocumentoOCFilter {
   expedienteId?: string
-  tipoDocumentoId?: string
+  checklistId?: string
   estado?: string
   obligatorio?: boolean
+  bloqueaSolicitudPago?: boolean
 }
 
 export interface ArchivoInput {
@@ -170,10 +162,8 @@ export function useAprobarDocumentoOC() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: (input: {
-      id: string
-      adminRevisorId: string
-    }) => graphqlRequest(APROBAR_DOCUMENTO_OC_MUTATION, { input }),
+    mutationFn: (input: { id: string }) =>
+      graphqlRequest(APROBAR_DOCUMENTO_OC_MUTATION, { input }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['documentos-oc'] })
       queryClient.invalidateQueries({ queryKey: ['documento-oc', variables.id] })
@@ -197,11 +187,8 @@ export function useObservarDocumentoOC() {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: (input: {
-      id: string
-      adminRevisorId: string
-      comentarios: string
-    }) => graphqlRequest(OBSERVAR_DOCUMENTO_OC_MUTATION, { input }),
+    mutationFn: (input: { id: string; comentarios: string }) =>
+      graphqlRequest(OBSERVAR_DOCUMENTO_OC_MUTATION, { input }),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['documentos-oc'] })
       queryClient.invalidateQueries({ queryKey: ['documento-oc', variables.id] })

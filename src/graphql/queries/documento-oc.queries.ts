@@ -1,5 +1,5 @@
 /**
- * 📄 QUERIES PARA DOCUMENTOS OC
+ * 📄 QUERIES PARA DOCUMENTOS OC (alineadas al schema GraphQL del backend)
  */
 
 export const LISTAR_DOCUMENTOS_OC_QUERY = `
@@ -7,33 +7,11 @@ export const LISTAR_DOCUMENTOS_OC_QUERY = `
     listarDocumentosOC(filter: $filter) {
       id
       expedienteId
-      tipoDocumentoId
-      plantillaDocumentoId
-      usuarioId
-      adminRevisorId
+      checklistId
       obligatorio
-      archivos {
-        url
-        nombreOriginal
-        mimeType
-        tamanioBytes
-        fechaSubida
-      }
+      bloqueaSolicitudPago
       estado
       fechaCarga
-      comentarios
-      tipoDocumento {
-        id
-        nombre
-        descripcion
-        unicoPorOc
-      }
-      plantillaDocumento {
-        id
-        nombrePlantilla
-        plantillaUrl
-        activo
-      }
     }
   }
 `;
@@ -43,31 +21,17 @@ export const OBTENER_DOCUMENTO_OC_QUERY = `
     obtenerDocumentoOC(id: $id) {
       id
       expedienteId
-      tipoDocumentoId
-      plantillaDocumentoId
-      usuarioId
-      adminRevisorId
+      checklistId
       obligatorio
-      archivos {
-        url
-        nombreOriginal
-        mimeType
-        tamanioBytes
-        fechaSubida
-      }
+      bloqueaSolicitudPago
       estado
       fechaCarga
-      comentarios
-      tipoDocumento {
+      checklist {
         id
+        codigo
         nombre
         descripcion
-        unicoPorOc
-      }
-      plantillaDocumento {
-        id
-        nombrePlantilla
-        plantillaUrl
+        categoriaChecklistId
         activo
       }
       expediente {
@@ -84,33 +48,11 @@ export const OBTENER_DOCUMENTOS_POR_EXPEDIENTE_QUERY = `
     obtenerDocumentosPorExpediente(expedienteId: $expedienteId) {
       id
       expedienteId
-      tipoDocumentoId
-      plantillaDocumentoId
-      usuarioId
-      adminRevisorId
+      checklistId
       obligatorio
-      archivos {
-        url
-        nombreOriginal
-        mimeType
-        tamanioBytes
-        fechaSubida
-      }
+      bloqueaSolicitudPago
       estado
       fechaCarga
-      comentarios
-      tipoDocumento {
-        id
-        nombre
-        descripcion
-        unicoPorOc
-      }
-      plantillaDocumento {
-        id
-        nombrePlantilla
-        plantillaUrl
-        activo
-      }
     }
   }
 `;
@@ -126,15 +68,11 @@ export const OBTENER_DOCUMENTOS_OBLIGATORIOS_PENDIENTES_QUERY = `
     obtenerDocumentosObligatoriosPendientes(expedienteId: $expedienteId) {
       id
       expedienteId
-      tipoDocumentoId
-      plantillaDocumentoId
+      checklistId
       obligatorio
+      bloqueaSolicitudPago
       estado
-      tipoDocumento {
-        id
-        nombre
-        descripcion
-      }
+      fechaCarga
     }
   }
 `;

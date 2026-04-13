@@ -1,5 +1,5 @@
 /**
- * 🔍 GRAPHQL QUERIES - CONSULTAS DE USUARIOS PROVEEDOR Y TIPO DOCUMENTO
+ * 🔍 GRAPHQL QUERIES - CONSULTAS DE USUARIOS PROVEEDOR
 */
 
 // Usuario Proveedor queries
@@ -11,14 +11,6 @@ export {
   GET_USUARIO_PROVEEDOR_BY_USERNAME_QUERY,
   GET_USUARIOS_PROVEEDOR_BY_PROVEEDOR_ID_QUERY
 } from './usuario-proveedor.queries';
-
-// Tipo Documento queries
-export {
-  GET_TIPOS_DOCUMENTO_QUERY,
-  GET_TIPO_DOCUMENTO_QUERY,
-  GET_TIPOS_DOCUMENTO_ACTIVOS_QUERY,
-  GET_TIPOS_DOCUMENTO_INACTIVOS_QUERY
-} from './tipo-documento.queries';
 
 // Categoria Checklist queries
 export {

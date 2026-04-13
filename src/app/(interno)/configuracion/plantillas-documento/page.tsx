@@ -108,21 +108,27 @@ export default function PlantillaDocumentoPage() {
       )
     },
     {
-      key: 'tipoDocumento',
-      header: 'Tipo Documento',
-      className: 'text-left text-xs',
-      render: (value: any, row: PlantillaDocumento) => {
-        if (row.tipoDocumento) {
+      key: 'formatosPermitidos',
+      header: 'Formatos Permitidos',
+      className: 'text-left min-w-[8rem] max-w-[14rem]',
+      render: (_value: string | undefined, row: PlantillaDocumento) => {
+        const raw = row.formatosPermitidos?.trim();
+        if (!raw) {
           return (
-            <span className="text-xs bg-blue-100/20 dark:bg-blue-200/10 text-blue-600 dark:text-blue-400 px-2 py-1 rounded font-medium">
-              {row.tipoDocumento.nombre}
-            </span>
+            <span className="text-xs text-muted-foreground">Sin restricciones</span>
           );
         }
         return (
-          <span className="text-xs bg-gray-100/20 dark:bg-gray-200/10 text-gray-600 dark:text-gray-400 px-2 py-1 rounded font-mono">
-            {row.tipoDocumentoId}
-          </span>
+          <div className="flex flex-wrap gap-1">
+            {raw.split(',').map((formato, index) => (
+              <span
+                key={index}
+                className="px-1.5 py-0.5 bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 rounded text-[10px] font-medium uppercase"
+              >
+                {formato.trim()}
+              </span>
+            ))}
+          </div>
         );
       }
     },

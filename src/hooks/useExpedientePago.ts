@@ -173,7 +173,6 @@ export interface Requisito {
   plantillaDocumento?: {
     id: string
     codigo: string
-    tipoDocumentoId: string
     nombrePlantilla: string
     plantillaUrl: string
     formatosPermitidos?: string

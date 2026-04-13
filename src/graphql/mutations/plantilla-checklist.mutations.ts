@@ -25,7 +25,6 @@ export const GUARDAR_PLANTILLA_CHECKLIST_MUTATION = `
         plantillaDocumento {
           id
           codigo
-          tipoDocumentoId
           nombrePlantilla
           plantillaUrl
           formatosPermitidos
@@ -65,7 +64,6 @@ export const CREATE_PLANTILLA_CHECKLIST_MUTATION = `
         plantillaDocumento {
           id
           codigo
-          tipoDocumentoId
           nombrePlantilla
           plantillaUrl
           formatosPermitidos
@@ -105,7 +103,6 @@ export const UPDATE_PLANTILLA_CHECKLIST_MUTATION = `
         plantillaDocumento {
           id
           codigo
-          tipoDocumentoId
           nombrePlantilla
           plantillaUrl
           formatosPermitidos

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCreateUsuarioProveedor } from '@/hooks';
 import { verificarCodigoAcceso, type VerificacionCodigoResponse } from '@/hooks/useVerificarCodigoAcceso';
 import { Button, Input } from '@/components/ui';
 import Modal from '@/components/ui/modal';
 import NotificationModal from '@/components/ui/notification-modal';
-import { UserPlus, CheckCircle } from 'lucide-react';
+import { UserPlus, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface UsuarioProveedorFormProps {
@@ -33,8 +33,22 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
   const [proveedorData, setProveedorData] = useState<any>(null);
   const [codigoVerificado, setCodigoVerificado] = useState(false);
   const [verificandoCodigo, setVerificandoCodigo] = useState(false);
+  const [mostrarContrasenna, setMostrarContrasenna] = useState(false);
 
   const createUsuarioProveedor = useCreateUsuarioProveedor();
+
+  useEffect(() => {
+    if (!isOpen) setMostrarContrasenna(false);
+  }, [isOpen]);
+
+  const CAMPOS_TRIM_BLUR = new Set([
+    'nombres',
+    'apellido_paterno',
+    'apellido_materno',
+    'dni',
+    'username',
+    'codigo_acceso',
+  ]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -42,9 +56,10 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
     if (!formData.nombres.trim()) newErrors.nombres = 'Los nombres son requeridos';
     if (!formData.apellido_paterno.trim()) newErrors.apellido_paterno = 'El apellido paterno es requerido';
     if (!formData.apellido_materno.trim()) newErrors.apellido_materno = 'El apellido materno es requerido';
-    if (!formData.dni.trim()) {
+    const dniLimpio = formData.dni.trim();
+    if (!dniLimpio) {
       newErrors.dni = 'El DNI es requerido';
-    } else if (formData.dni.length !== 8) {
+    } else if (dniLimpio.length !== 8) {
       newErrors.dni = 'El DNI debe tener 8 dígitos';
     }
     if (!formData.username.trim()) newErrors.username = 'El username es requerido';
@@ -86,16 +101,27 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
     }
   };
 
+  const handleBlurTrim = (e: React.FocusEvent<HTMLInputElement>) => {
+    const name = e.target.name;
+    if (!CAMPOS_TRIM_BLUR.has(name)) return;
+    const trimmed = e.target.value.trim();
+    if (trimmed === e.target.value) return;
+    setFormData((prev) => ({ ...prev, [name]: trimmed }));
+  };
+
   const handleVerificarCodigo = async () => {
-    if (!formData.codigo_acceso.trim()) {
+    const codigoLimpio = formData.codigo_acceso.trim();
+    if (!codigoLimpio) {
       toast.error('Ingrese un código de acceso');
       return;
     }
 
+    setFormData((prev) => ({ ...prev, codigo_acceso: codigoLimpio }));
+
     setVerificandoCodigo(true);
     
     try {
-      const result = await verificarCodigoAcceso(formData.codigo_acceso);
+      const result = await verificarCodigoAcceso(codigoLimpio);
       
       if (result.valido && result.proveedor) {
         const proveedor = result.proveedor;
@@ -148,8 +174,16 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
 
   const handleConfirmCreate = async () => {
     try {
-      // Eliminar codigo_acceso antes de enviar
-      const { codigo_acceso, ...dataToSend } = formData;
+      // Eliminar codigo_acceso antes de enviar; quitar espacios accidentales al pegar
+      const { codigo_acceso, ...rest } = formData;
+      const dataToSend = {
+        ...rest,
+        nombres: rest.nombres.trim(),
+        apellido_paterno: rest.apellido_paterno.trim(),
+        apellido_materno: rest.apellido_materno.trim(),
+        dni: rest.dni.trim(),
+        username: rest.username.trim(),
+      };
       
       await createUsuarioProveedor.mutateAsync(dataToSend);
       toast.success('Usuario proveedor creado exitosamente');
@@ -265,6 +299,7 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
                 name="nombres"
                 value={formData.nombres}
                 onChange={handleInputChange}
+                onBlur={handleBlurTrim}
                 required
                 placeholder="Ingresa nombres"
                 className={errors.nombres ? 'border-red-500' : ''}
@@ -282,6 +317,7 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
                 name="apellido_paterno"
                 value={formData.apellido_paterno}
                 onChange={handleInputChange}
+                onBlur={handleBlurTrim}
                 required
                 placeholder="Ingresa apellido paterno"
                 className={errors.apellido_paterno ? 'border-red-500' : ''}
@@ -299,6 +335,7 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
                 name="apellido_materno"
                 value={formData.apellido_materno}
                 onChange={handleInputChange}
+                onBlur={handleBlurTrim}
                 required
                 placeholder="Ingresa apellido materno"
                 className={errors.apellido_materno ? 'border-red-500' : ''}
@@ -316,6 +353,7 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
                 name="dni"
                 value={formData.dni}
                 onChange={handleInputChange}
+                onBlur={handleBlurTrim}
                 required
                 placeholder="Ingresa DNI"
                 maxLength={8}
@@ -335,6 +373,7 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
+                onBlur={handleBlurTrim}
                 required
                 placeholder="Ingresa username"
                 className={errors.username ? 'border-red-500' : ''}
@@ -348,15 +387,30 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Contraseña*
               </label>
-              <Input
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                placeholder="Ingresa contraseña"
-                className={errors.password ? 'border-red-500' : ''}
-              />
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={mostrarContrasenna ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="Ingresa contraseña"
+                  className={`pr-10 ${errors.password ? 'border-red-500' : ''}`}
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1.5 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                  onClick={() => setMostrarContrasenna((v) => !v)}
+                  aria-label={mostrarContrasenna ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {mostrarContrasenna ? (
+                    <EyeOff className="h-4 w-4" aria-hidden />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden />
+                  )}
+                </button>
+              </div>
               {errors.password && (
                 <p className="text-xs text-red-500 mt-1">{errors.password}</p>
               )}
@@ -371,6 +425,7 @@ export default function UsuarioProveedorForm({ isOpen, onClose }: UsuarioProveed
                   name="codigo_acceso"
                   value={formData.codigo_acceso}
                   onChange={handleInputChange}
+                  onBlur={handleBlurTrim}
                   required
                   placeholder="Ingresa código de acceso"
                   className={errors.codigo_acceso ? 'border-red-500' : ''}

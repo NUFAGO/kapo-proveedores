@@ -52,19 +52,12 @@ export interface RequisitoDocumento {
   plantillaDocumento?: {
     id: string
     codigo: string
-    tipoDocumentoId: string
     nombrePlantilla: string
     plantillaUrl?: string
     formatosPermitidos?: string
     activo: boolean
     fechaCreacion: string
     fechaActualizacion?: string
-    tipoDocumento?: {
-      id: string
-      codigo: string
-      nombre: string
-      descripcion: string
-    }
   }
   formulario?: PlantillaFormulario
 }

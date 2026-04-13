@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { graphqlRequest, getGraphQLAuthHeaders } from '@/lib/graphql-client';
 import {
   SUBIR_ARCHIVO_MUTATION,
@@ -148,6 +149,15 @@ export const useUpload = () => {
     setIsUploading(true);
     setProgress(0);
 
+    const n = files.length;
+    const uploadToastId =
+      n > 0
+        ? toast.loading(
+            `Subiendo ${n} ${n === 1 ? 'archivo' : 'archivos'}…`,
+            { duration: Infinity }
+          )
+        : undefined;
+
     try {
       // Crear FormData para múltiples archivos
       const formData = new FormData();
@@ -201,6 +211,9 @@ export const useUpload = () => {
       console.error('Error al subir múltiples archivos:', error);
       throw error;
     } finally {
+      if (uploadToastId !== undefined) {
+        toast.dismiss(uploadToastId);
+      }
       setIsUploading(false);
       setProgress(0);
     }

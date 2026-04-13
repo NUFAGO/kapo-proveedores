@@ -21,11 +21,11 @@ export default function PlantillaChecklistPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
-  // Ref para el contenedor del scroll
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
 
-  const limit = 12;
-  const offset = (currentPage - 1) * limit;
+  const tableLimit = 10;
+  const gridPageSize = 12;
+  const offset = (currentPage - 1) * tableLimit;
 
   // Construir filtros para la búsqueda
   const filters: PlantillaChecklistFiltros | undefined = searchQuery || selectedCategory
@@ -36,9 +36,14 @@ export default function PlantillaChecklistPage() {
     : undefined;
 
   // Usar hook diferente según el modo de vista
-  const paginatedQuery = usePlantillasChecklist(filters, limit, offset);
-  const infiniteQuery = usePlantillasChecklistInfinite(filters, limit);
-  
+  const paginatedQuery = usePlantillasChecklist(filters, tableLimit, offset);
+  const infiniteQuery = usePlantillasChecklistInfinite(filters, gridPageSize);
+
+  const fetchNextPageRef = useRef(infiniteQuery.fetchNextPage);
+  fetchNextPageRef.current = infiniteQuery.fetchNextPage;
+  const isFetchingNextRef = useRef(infiniteQuery.isFetchingNextPage);
+  isFetchingNextRef.current = infiniteQuery.isFetchingNextPage;
+
   // Seleccionar el query apropiado según el modo
   const { data, isLoading, error, refetch } = viewMode === 'list' ? paginatedQuery : {
     data: {
@@ -53,33 +58,27 @@ export default function PlantillaChecklistPage() {
   // Extraer datos del resultado
   const plantillasChecklist = data?.plantillasChecklist || [];
   const totalCount = data?.totalCount || 0;
-  const totalPages = Math.ceil(totalCount / limit);
+  const totalPages = Math.ceil(totalCount / tableLimit);
 
-  // Para scroll infinito
-  const hasMore = infiniteQuery.hasNextPage;
-  const loadMore = () => {
-    if (hasMore && viewMode === 'grid') {
-      infiniteQuery.fetchNextPage();
-    }
-  };
-
-  const handleScroll = (e: Event) => {
-    const target = e.target as HTMLDivElement;
-    if (viewMode === 'grid' && hasMore && !infiniteQuery.isFetchingNextPage) {
-      const { scrollTop, scrollHeight, clientHeight } = target;
-      if (scrollTop + clientHeight >= scrollHeight - 100) {
-        loadMore();
-      }
-    }
-  };
+  const hasMore = Boolean(infiniteQuery.hasNextPage);
 
   useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (container && viewMode === 'grid') {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [viewMode, hasMore, infiniteQuery.isFetchingNextPage, loadMore, handleScroll]);
+    if (viewMode !== 'grid' || !hasMore) return;
+    const el = loadMoreSentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        if (isFetchingNextRef.current) return;
+        void fetchNextPageRef.current();
+      },
+      { root: null, rootMargin: '160px', threshold: 0 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [viewMode, hasMore, plantillasChecklist.length, searchQuery, selectedCategory]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -484,32 +483,32 @@ export default function PlantillaChecklistPage() {
               </div>
             </div>
           ) : (
-            <div 
-              ref={scrollContainerRef}
-              className="overflow-y-auto -mb-6 px-2 pt-1"
-            >
+            <div className="-mb-6 px-2 pt-1">
               <div className="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-4 items-start">
                 {isLoading ? (
-                  // Mostrar skeletons mientras carga
                   Array.from({ length: 6 }).map((_, index) => (
                     <SkeletonCard key={`skeleton-${index}`} />
                   ))
                 ) : (
-                  // Mostrar las plantillas reales
                   plantillasChecklist.map((plantilla: PlantillaChecklist) => (
                     <PlantillaCard key={plantilla.id} plantilla={plantilla} />
                   ))
                 )}
               </div>
-              
-              {/* Indicador de carga para scroll infinito */}
+
+              {hasMore ? (
+                <div
+                  ref={loadMoreSentinelRef}
+                  className="h-4 w-full shrink-0"
+                  aria-hidden
+                />
+              ) : null}
+
               {infiniteQuery.isFetchingNextPage && (
                 <div className="flex justify-center py-4">
                   <LoadingSpinner size={20} />
                 </div>
               )}
-              
-              
             </div>
           )}
         </>
@@ -518,6 +517,7 @@ export default function PlantillaChecklistPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl ">
           <DataTable
             data={plantillasChecklist}
+            rowsPerPage={tableLimit}
             columns={[
               {
                 key: 'nombre',

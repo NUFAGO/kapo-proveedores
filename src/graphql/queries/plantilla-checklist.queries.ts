@@ -26,7 +26,6 @@ export const LISTAR_PLANTILLAS_CHECKLIST_QUERY = `
           plantillaDocumento {
             id
             codigo
-            tipoDocumentoId
             nombrePlantilla
             plantillaUrl
             formatosPermitidos
@@ -67,7 +66,6 @@ export const OBTENER_PLANTILLA_CHECKLIST_QUERY = `
         plantillaDocumento {
           id
           codigo
-          tipoDocumentoId
           nombrePlantilla
           plantillaUrl
           formatosPermitidos
@@ -106,7 +104,6 @@ export const FIND_ACTIVAS_PLANTILLA_CHECKLIST_QUERY = `
         plantillaDocumento {
           id
           codigo
-          tipoDocumentoId
           nombrePlantilla
           plantillaUrl
           formatosPermitidos
@@ -146,7 +143,6 @@ export const FIND_INACTIVAS_PLANTILLA_CHECKLIST_QUERY = `
         plantillaDocumento {
           id
           codigo
-          tipoDocumentoId
           nombrePlantilla
           plantillaUrl
           formatosPermitidos

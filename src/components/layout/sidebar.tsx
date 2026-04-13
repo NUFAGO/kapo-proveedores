@@ -76,11 +76,6 @@ const adminNavItems: NavItem[] = [
     icon: MdLibraryBooks,
     subItems: [
       {
-        name: 'Tipos de Documento',
-        href: '/configuracion/tipos-documentos',
-        icon: MdDescription,
-      },
-      {
         name: 'Plantillas Documento',
         href: '/configuracion/plantillas-documento',
         icon: TbTemplateFilled,

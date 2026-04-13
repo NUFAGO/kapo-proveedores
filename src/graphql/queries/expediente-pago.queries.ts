@@ -186,7 +186,6 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
             plantillaDocumento {
               id
               codigo
-              tipoDocumentoId
               nombrePlantilla
               plantillaUrl
               formatosPermitidos
@@ -238,7 +237,6 @@ export const OBTENER_EXPEDIENTE_COMPLETO_QUERY = `
             plantillaDocumento {
               id
               codigo
-              tipoDocumentoId
               nombrePlantilla
               plantillaUrl
               formatosPermitidos

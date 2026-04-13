@@ -1,14 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { usePlantillaDocumento, usePlantillaDocumentoPorId, type PlantillaDocumento, type PlantillaDocumentoInput } from '@/hooks/usePlantillaDocumento';
-import { useTiposDocumento } from '@/hooks/useTipoDocumento';
+import { usePlantillaDocumento, usePlantillaDocumentoPorId, type PlantillaDocumentoInput } from '@/hooks/usePlantillaDocumento';
 import { Button, Input, Select, FormatosSelector } from '@/components/ui';
 import { useUpload } from '@/hooks/useUpload';
 import Modal from '@/components/ui/modal';
 import { FileText, Edit, CheckCircle, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { TipoDocumento } from '@/hooks/useTipoDocumento';
 
 interface PlantillaDocumentoFormProps {
   isOpen: boolean;
@@ -18,7 +16,6 @@ interface PlantillaDocumentoFormProps {
 
 // Interfaz local para el formulario
 interface PlantillaDocumentoFormData {
-  tipoDocumentoId: string;
   nombrePlantilla: string;
   archivos: File[];
   plantillaUrl: string;
@@ -28,7 +25,6 @@ interface PlantillaDocumentoFormData {
 
 export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocumentoId }: PlantillaDocumentoFormProps) {
   const [formData, setFormData] = useState<PlantillaDocumentoFormData>({
-    tipoDocumentoId: '',
     nombrePlantilla: '',
     archivos: [],
     plantillaUrl: '',
@@ -46,16 +42,11 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
   // Hooks para mutaciones
   const { crearPlantillaDocumento, actualizarPlantillaDocumento, isCreating, isUpdating } = usePlantillaDocumento();
   const { data: plantillaData, isLoading: isLoadingPlantilla } = usePlantillaDocumentoPorId(plantillaDocumentoId || '');
-  const { data: tiposDocumentoData } = useTiposDocumento({}, 100, 0); // Obtener todos los tipos de documento
   const { uploadMultipleFiles, deleteFile, isUploading } = useUpload();
-
-  // Extraer tipos de documento
-  const tiposDocumento = tiposDocumentoData?.listarTiposDocumento?.tiposDocumento || [];
 
   // Resetear formulario
   const resetForm = () => {
     setFormData({
-      tipoDocumentoId: '',
       nombrePlantilla: '',
       archivos: [],
       plantillaUrl: '',
@@ -71,7 +62,6 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
   useEffect(() => {
     if (isEditMode && plantillaData && !isLoadingPlantilla) {
       const loadedData = {
-        tipoDocumentoId: plantillaData.tipoDocumentoId,
         nombrePlantilla: plantillaData.nombrePlantilla,
         archivos: [],
         plantillaUrl: plantillaData.plantillaUrl || '',
@@ -105,10 +95,6 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
   // Validar formulario
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.tipoDocumentoId.trim()) {
-      newErrors.tipoDocumentoId = 'El tipo de documento es requerido';
-    }
 
     if (!formData.nombrePlantilla.trim()) {
       newErrors.nombrePlantilla = 'El nombre de la plantilla es requerido';
@@ -188,7 +174,6 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
       }
 
       const submitData: PlantillaDocumentoInput = {
-        tipoDocumentoId: formData.tipoDocumentoId,
         nombrePlantilla: formData.nombrePlantilla.trim(),
         plantillaUrl: plantillaUrl,
         formatosPermitidos: formData.formatosPermitidos || undefined,
@@ -424,27 +409,6 @@ export default function PlantillaDocumentoForm({ isOpen, onClose, plantillaDocum
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Tipo de Documento */}
-        <div>
-          <label className="block text-xs font-medium text-text-primary mb-1">
-            Tipo de Documento{errors.tipoDocumentoId && <span className="text-red-500">*</span>}
-          </label>
-          <Select
-            value={formData.tipoDocumentoId}
-            onChange={(value) => handleInputChange('tipoDocumentoId', value || '')}
-            options={tiposDocumento.map((tipo: TipoDocumento) => ({
-              value: tipo.id,
-              label: `${tipo.codigo} - ${tipo.nombre}`
-            }))}
-            placeholder="Seleccionar tipo de documento"
-            disabled={isLoading}
-            className={errors.tipoDocumentoId ? 'border-red-400' : ''}
-          />
-          {errors.tipoDocumentoId && (
-            <p className="mt-1 text-xs text-red-400">{errors.tipoDocumentoId}</p>
-          )}
-        </div>
-
         {/* Nombre de la Plantilla */}
         <div>
           <label className="block text-xs font-medium text-text-primary mb-1">

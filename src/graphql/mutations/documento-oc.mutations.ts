@@ -7,15 +7,11 @@ export const CREAR_DOCUMENTO_OC_MUTATION = `
     crearDocumentoOC(input: $input) {
       id
       expedienteId
-      tipoDocumentoId
-      plantillaDocumentoId
+      checklistId
       obligatorio
+      bloqueaSolicitudPago
       estado
-      tipoDocumento {
-        id
-        nombre
-        descripcion
-      }
+      fechaCarga
     }
   }
 `;
@@ -24,6 +20,7 @@ export const SUBIR_ARCHIVOS_DOCUMENTO_MUTATION = `
   mutation SubirArchivosDocumento($input: SubirArchivosInput!) {
     subirArchivosDocumento(input: $input) {
       id
+      documentoOCId
       archivos {
         url
         nombreOriginal
@@ -32,8 +29,8 @@ export const SUBIR_ARCHIVOS_DOCUMENTO_MUTATION = `
         fechaSubida
       }
       estado
-      fechaCarga
-      usuarioId
+      fechaSubida
+      version
     }
   }
 `;
@@ -42,8 +39,11 @@ export const APROBAR_DOCUMENTO_OC_MUTATION = `
   mutation AprobarDocumentoOC($input: AprobarDocumentoInput!) {
     aprobarDocumentoOC(input: $input) {
       id
+      expedienteId
+      checklistId
+      obligatorio
+      bloqueaSolicitudPago
       estado
-      adminRevisorId
       fechaCarga
     }
   }
@@ -53,9 +53,12 @@ export const OBSERVAR_DOCUMENTO_OC_MUTATION = `
   mutation ObservarDocumentoOC($input: ObservarDocumentoInput!) {
     observarDocumentoOC(input: $input) {
       id
+      expedienteId
+      checklistId
+      obligatorio
+      bloqueaSolicitudPago
       estado
-      adminRevisorId
-      comentarios
+      fechaCarga
     }
   }
 `;
@@ -65,19 +68,11 @@ export const ACTUALIZAR_DOCUMENTO_OC_MUTATION = `
     actualizarDocumentoOC(id: $id, input: $input) {
       id
       expedienteId
-      tipoDocumentoId
-      plantillaDocumentoId
+      checklistId
       obligatorio
-      tipoDocumento {
-        id
-        nombre
-        descripcion
-      }
-      plantillaDocumento {
-        id
-        nombrePlantilla
-        plantillaUrl
-      }
+      bloqueaSolicitudPago
+      estado
+      fechaCarga
     }
   }
 `;

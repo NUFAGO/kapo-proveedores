@@ -7,7 +7,6 @@
  * Contiene:
  * - useAuth: Autenticación y usuario (viene de context)
  * - useUsuarioProveedor: Gestión de usuarios proveedor
- * - useTipoDocumento: Gestión de tipos de documento
  */
 
 // Hooks de autenticación (viene del context)
@@ -32,21 +31,6 @@ export {
   type UsuarioProveedorPaginadoFilter,
   type UsuarioProveedorConnection,
 } from './useUsuarioProveedor';
-
-// Hooks de tipos de documento
-export {
-  useTiposDocumento,
-  useTipoDocumento,
-  useTiposDocumentoActivos,
-  useTiposDocumentoInactivos,
-  useCrearTipoDocumento,
-  useActualizarTipoDocumento,
-  useEliminarTipoDocumento,
-  type TipoDocumento,
-  type TipoDocumentoInput,
-  type TipoDocumentoFiltros,
-  type TipoDocumentoConnection
-} from './useTipoDocumento';
 
 // Hooks de categorías de checklist
 export {

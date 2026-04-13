@@ -14,13 +14,6 @@ export {
   CAMBIAR_CONTRASENA_USUARIO_PROVEEDOR_MUTATION,
 } from './usuario-proveedor.mutations';
 
-// Tipo Documento mutations
-export {
-  CREATE_TIPO_DOCUMENTO_MUTATION,
-  UPDATE_TIPO_DOCUMENTO_MUTATION,
-  DELETE_TIPO_DOCUMENTO_MUTATION
-} from './tipo-documento.mutations';
-
 // Categoria Checklist mutations
 export {
   CREATE_CATEGORIA_CHECKLIST_MUTATION,

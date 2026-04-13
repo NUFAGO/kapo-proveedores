@@ -15,14 +15,23 @@ import {
   Check,
   GripVertical,
   Banknote,
+  Calendar,
+  Eye,
 } from 'lucide-react'
 import { Button, Input } from '@/components/ui'
+import { Badge } from '@/components/ui/badge'
 import ModalChecklistSelector from './components/modalChecklistSelector'
+import { ChecklistModal } from '@/app/(portal)/proveedor/ordenes/[codigo]/components/checklistModal'
+import type { EntidadAprobacionRef } from '@/hooks/useAprobacionYDetalleChecklistPorEntidad'
 import {
   useGuardarExpedienteConItems,
   useActualizarExpedienteItems,
   useExpedientePorCodigo,
   useExpedienteCompleto,
+  useSolicitudesPorExpediente,
+  type SolicitudPagoResumen,
+  type TipoPagoOC,
+  type DocumentoOC,
 } from '@/hooks/useExpedientePago'
 import { useOrdenesCompra } from '@/hooks'
 import toast from 'react-hot-toast'
@@ -157,6 +166,45 @@ const CardSkeleton = () => (
   </div>
 )
 
+function HistorialRowSk() {
+  return (
+    <div className="bg-card-bg border border-border-color rounded-lg p-3 flex items-center justify-between gap-3">
+      <div className="space-y-2 min-w-0 flex-1">
+        <div className="h-4 w-48 max-w-full animate-pulse rounded bg-[var(--skeleton-bg)]" />
+        <div className="h-3 w-24 animate-pulse rounded bg-[var(--skeleton-bg)]" />
+      </div>
+      <div className="flex items-center gap-3 shrink-0">
+        <div className="h-4 w-16 animate-pulse rounded bg-[var(--skeleton-bg)]" />
+        <div className="h-5 w-20 animate-pulse rounded-full bg-[var(--skeleton-bg)]" />
+      </div>
+    </div>
+  )
+}
+
+const estadoSolicitudConfig: Record<
+  SolicitudPagoResumen['estado'],
+  { label: string; color: string }
+> = {
+  BORRADOR: { label: 'Borrador', color: 'bg-gray-400' },
+  EN_REVISION: { label: 'En Revisión', color: 'bg-blue-500' },
+  OBSERVADA: { label: 'Observada', color: 'bg-yellow-500' },
+  RECHAZADA: { label: 'Rechazada', color: 'bg-red-500' },
+  APROBADO: { label: 'Aprobada', color: 'bg-emerald-500' },
+}
+
+/** Estados de documento OC (misma escala visual que solicitudes de pago). */
+const estadoDocumentoOCConfig: Record<string, { label: string; color: string }> = {
+  BORRADOR: { label: 'Borrador', color: 'bg-gray-400' },
+  EN_REVISION: { label: 'En Revisión', color: 'bg-blue-500' },
+  OBSERVADA: { label: 'Observada', color: 'bg-yellow-500' },
+  RECHAZADA: { label: 'Rechazada', color: 'bg-red-500' },
+  APROBADO: { label: 'Aprobado', color: 'bg-emerald-500' },
+}
+
+type HistorialExpedienteItem =
+  | { kind: 'solicitud'; sortTs: number; solicitud: SolicitudPagoResumen }
+  | { kind: 'documento'; sortTs: number; documento: DocumentoOC }
+
 export default function ExpedientePage() {
   const params = useParams()
   const codigo = params.codigo as string
@@ -164,6 +212,11 @@ export default function ExpedientePage() {
   // Estados para los modales
   const [showModalSolicitud, setShowModalSolicitud] = useState(false)
   const [showModalDocumento, setShowModalDocumento] = useState(false)
+  const [showHistorialChecklistModal, setShowHistorialChecklistModal] = useState(false)
+  const [historialSelectedTipoPago, setHistorialSelectedTipoPago] = useState<string | null>(null)
+  const [historialSelectedDocumentoId, setHistorialSelectedDocumentoId] = useState<string | null>(null)
+  const [historialEntidadAprobacion, setHistorialEntidadAprobacion] =
+    useState<EntidadAprobacionRef | null>(null)
   
   // Estado global temporal para los items agregados
   const [itemsAgregados, setItemsAgregados] = useState<ExpedienteItem[]>([])
@@ -209,6 +262,45 @@ export default function ExpedientePage() {
     isEditMode && expedienteId ? expedienteId : ''
   )
   const expedienteCompleto = (expedienteCompletoData as any)?.obtenerExpedienteCompleto
+
+  const estadoExpedienteNorm = (expedienteExistente?.estado ?? '').toLowerCase()
+  const mostrarHistorialSolicitudes =
+    isEditMode && Boolean(expedienteId) && estadoExpedienteNorm !== 'configurado'
+
+  const { data: solicitudes = [], isLoading: isLoadingSolicitudes } = useSolicitudesPorExpediente(
+    mostrarHistorialSolicitudes && expedienteId ? expedienteId : ''
+  )
+
+  const documentosParaHistorial = useMemo(
+    () => (expedienteCompleto?.documentos ?? EMPTY_DOCUMENTOS) as DocumentoOC[],
+    [expedienteCompleto?.documentos]
+  )
+
+  const historialExpedienteItems = useMemo((): HistorialExpedienteItem[] => {
+    const items: HistorialExpedienteItem[] = []
+    for (const s of solicitudes) {
+      const t = new Date(s.fechaCreacion).getTime()
+      items.push({
+        kind: 'solicitud',
+        sortTs: Number.isFinite(t) ? t : 0,
+        solicitud: s,
+      })
+    }
+    for (const d of documentosParaHistorial) {
+      const raw = d.fechaCarga as string | Date | undefined
+      const t = raw != null && raw !== '' ? new Date(raw).getTime() : 0
+      items.push({
+        kind: 'documento',
+        sortTs: Number.isFinite(t) ? t : 0,
+        documento: d,
+      })
+    }
+    items.sort((a, b) => b.sortTs - a.sortTs)
+    return items
+  }, [solicitudes, documentosParaHistorial])
+
+  const isLoadingHistorialExpediente =
+    isLoadingSolicitudes || (mostrarHistorialSolicitudes && loadingExpedienteCompleto)
 
   /** Papelera en cards de BD: solo si el expediente está en `configurado` (el backend no limita por estado). */
   const puedeEliminarPersistidos = expedienteExistente?.estado === 'configurado'
@@ -260,6 +352,41 @@ export default function ExpedientePage() {
 
   const handleEliminarItem = (itemId: string) => {
     setItemsAgregados(prev => prev.filter(item => item.id !== itemId))
+  }
+
+  const handleAccionHistorialSolicitud = (solicitud: SolicitudPagoResumen) => {
+    setHistorialSelectedDocumentoId(null)
+    setHistorialSelectedTipoPago(solicitud.tipoPagoOCId)
+    if (solicitud.estado === 'BORRADOR') {
+      setHistorialEntidadAprobacion(null)
+    } else {
+      setHistorialEntidadAprobacion({
+        entidadTipo: 'solicitud_pago',
+        entidadId: solicitud.id,
+      })
+    }
+    setShowHistorialChecklistModal(true)
+  }
+
+  /** Misma regla que el portal proveedor: revisión con entidad o borrador solo con documento seleccionado. */
+  const handleAccionHistorialDocumentoOc = (documento: DocumentoOC) => {
+    const estado = (documento.estado || '').toUpperCase()
+    const abreConRevision =
+      estado === 'EN_REVISION' ||
+      estado === 'OBSERVADA' ||
+      estado === 'APROBADO' ||
+      estado === 'RECHAZADA'
+    setHistorialSelectedTipoPago(null)
+    setHistorialSelectedDocumentoId(documento.id)
+    if (abreConRevision) {
+      setHistorialEntidadAprobacion({
+        entidadTipo: 'documento_oc',
+        entidadId: documento.id,
+      })
+    } else {
+      setHistorialEntidadAprobacion(null)
+    }
+    setShowHistorialChecklistModal(true)
   }
 
   const handleGuardarTodo = async () => {
@@ -1417,6 +1544,196 @@ export default function ExpedientePage() {
           </div>
         </div>
       </div>
+
+      {mostrarHistorialSolicitudes ? (
+        <div className="bg-background backdrop-blur-sm rounded-lg card-shadow overflow-hidden">
+          <div className="bg-card-bg px-4 py-3 border-b border-border-color">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2 min-w-0">
+                <Calendar className="w-4 h-4 shrink-0" />
+                Historial de solicitudes
+              </h2>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Badge variant="secondary" className="text-xs">
+                  {historialExpedienteItems.length} ítem{historialExpedienteItems.length !== 1 ? 's' : ''}
+                </Badge>
+                <Badge variant="outline" className="text-[11px] font-normal">
+                  {solicitudes.length} solic. · {documentosParaHistorial.length} doc. OC
+                </Badge>
+              </div>
+            </div>
+            <p className="text-[11px] text-text-secondary mt-2 leading-snug">
+              Solicitudes de pago y documentación OC del expediente (mismo criterio y detalle que en{' '}
+              <span className="font-medium text-text-primary">/proveedor/ordenes</span>), ordenados por fecha más
+              reciente.
+            </p>
+          </div>
+
+          <div className="p-4">
+            {isLoadingHistorialExpediente ? (
+              <div className="space-y-2">
+                {[0, 1, 2].map((i) => (
+                  <HistorialRowSk key={i} />
+                ))}
+              </div>
+            ) : historialExpedienteItems.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="w-8 h-8 text-text-secondary mx-auto mb-3" />
+                <h3 className="text-sm font-medium text-text-primary mb-2">Sin movimientos aún</h3>
+                <p className="text-text-secondary text-xs">
+                  No hay solicitudes de pago ni documentos OC con actividad registrada en este expediente.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {historialExpedienteItems.map((row) => {
+                  if (row.kind === 'solicitud') {
+                    const solicitud = row.solicitud
+                    return (
+                      <div
+                        key={`sp-${solicitud.id}`}
+                        className="bg-card-bg border border-border-color rounded-lg p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline" className="text-[10px] font-medium shrink-0">
+                              Solicitud de pago
+                            </Badge>
+                            <span className="text-xs font-semibold text-text-primary min-w-0">
+                              {solicitud.tipoPagoOC?.categoria?.nombre
+                                ? `TP-${solicitud.tipoPagoOC.orden} · ${solicitud.tipoPagoOC.categoria.nombre}`
+                                : `TP-${solicitud.tipoPagoOC?.orden ?? '?'}`}
+                            </span>
+                          </div>
+                          <span className="text-xs text-text-secondary">
+                            {new Date(solicitud.fechaCreacion).toLocaleDateString('es-PE', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:items-end sm:shrink-0">
+                          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                            <span className="text-sm font-bold text-text-primary tabular-nums">
+                              S/ {solicitud.montoSolicitado.toLocaleString('es-PE')}
+                            </span>
+                            <Badge
+                              className={`${estadoSolicitudConfig[solicitud.estado]?.color ?? 'bg-gray-400'} text-white text-xs`}
+                            >
+                              {estadoSolicitudConfig[solicitud.estado]?.label ?? solicitud.estado}
+                            </Badge>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 gap-1 text-xs"
+                              onClick={() => handleAccionHistorialSolicitud(solicitud)}
+                            >
+                              <Eye className="w-3 h-3" />
+                              Detalles
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  const documento = row.documento
+                  const estadoDoc = (documento.estado || '').toUpperCase()
+                  const cfg = estadoDocumentoOCConfig[estadoDoc]
+                  const fechaDoc =
+                    documento.fechaCarga != null && String(documento.fechaCarga).trim() !== ''
+                      ? new Date(documento.fechaCarga as string | Date).toLocaleDateString('es-PE', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : null
+                  const tituloDoc =
+                    documento.checklist?.nombre ||
+                    documento.checklist?.categoria?.nombre ||
+                    'Documento OC'
+
+                  return (
+                    <div
+                      key={`doc-${documento.id}`}
+                      className="bg-card-bg border border-border-color rounded-lg p-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-medium shrink-0 border-emerald-500/40 text-emerald-800 dark:text-emerald-300"
+                          >
+                            Documento OC
+                          </Badge>
+                          <span className="text-xs font-semibold text-text-primary min-w-0 break-words">
+                            {tituloDoc}
+                          </span>
+                        </div>
+                        <span className="text-xs text-text-secondary">
+                          {fechaDoc ?? 'Sin fecha de carga'}
+                          {documento.checklist?.categoria?.nombre ? (
+                            <span className="text-text-secondary/80">
+                              {' '}
+                              · {documento.checklist.categoria.nombre}
+                            </span>
+                          ) : null}
+                        </span>
+                        {documento.obligatorio ? (
+                          <span className="text-[10px] text-amber-700 dark:text-amber-400">Obligatorio</span>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-col gap-2 sm:items-end sm:shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                          <span className="text-xs text-text-secondary tabular-nums sm:min-w-[4.5rem] sm:text-right">
+                            —
+                          </span>
+                          <Badge className={`${cfg?.color ?? 'bg-gray-400'} text-white text-xs`}>
+                            {cfg?.label ?? documento.estado}
+                          </Badge>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 gap-1 text-xs"
+                            onClick={() => handleAccionHistorialDocumentoOc(documento)}
+                          >
+                            <Eye className="w-3 h-3" />
+                            Detalles
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {mostrarHistorialSolicitudes && expedienteCompleto ? (
+        <ChecklistModal
+          isOpen={showHistorialChecklistModal}
+          onClose={() => {
+            setShowHistorialChecklistModal(false)
+            setHistorialSelectedTipoPago(null)
+            setHistorialSelectedDocumentoId(null)
+            setHistorialEntidadAprobacion(null)
+          }}
+          expedienteId={expedienteCompleto.id}
+          entidadAprobacion={historialEntidadAprobacion}
+          montoDisponible={expedienteCompleto.montoDisponible}
+          montoContrato={expedienteCompleto.montoContrato}
+          solicitudesExpediente={solicitudes}
+          tiposPago={(expedienteCompleto.tiposPago || []) as TipoPagoOC[]}
+          documentos={(expedienteCompleto.documentos || []) as DocumentoOC[]}
+          selectedTipoPagoId={historialSelectedTipoPago || undefined}
+          selectedDocumentoId={historialSelectedDocumentoId || undefined}
+        />
+      ) : null}
 
       {/* Modales - siempre para agregar nuevos */}
       <ModalChecklistSelector
